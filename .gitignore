@@ -1,0 +1,9 @@
+.snakemake/
+error_files/
+benchmarks/
+data/
+temp/
+logs/
+!logs/rulegraph.png
+!logs/dag.png
+!logs/filegraph.png

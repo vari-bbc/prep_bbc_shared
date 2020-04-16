@@ -1,0 +1,27 @@
+$schema: "http://json-schema.org/draft-06/schema#"
+
+description: species and URLs for raw data.
+properties:
+
+  species:
+    type: string
+    description: species name. E.g. mouse, human
+
+  id:
+    type: string
+    description: ID for naming files. E.g. mm10_gencode or hg38_gencode
+
+  genome_fasta:
+    type: string
+    description: URL for genome fasta
+
+  gene_gtf:
+    type: string
+    description: URL for GTF
+
+
+required:
+  - species
+  - id
+  - genome_fasta
+  - gene_gtf
