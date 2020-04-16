@@ -3,7 +3,8 @@ error_files/
 benchmarks/
 data/
 temp/
-logs/
+!logs
+logs/*
 !logs/rulegraph.png
 !logs/dag.png
 !logs/filegraph.png
