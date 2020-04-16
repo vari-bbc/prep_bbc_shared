@@ -5,15 +5,15 @@ This is a Snakemake pipeline for preparing index files and other shared resource
 The file structure is:
 
 * Date of creation
- * Human
-  * sequence
-  * annotation
-  * indexes
-   * star
-   * bwa
- * Mouse
-  * sequence
-  * annotation
-  * indexes
-   * star
-   * bwa
+    * Human
+        * sequence
+        * annotation
+        * indexes
+            * star
+            * bwa
+    * Mouse
+        * sequence
+        * annotation
+        * indexes
+            * star
+            * bwa
