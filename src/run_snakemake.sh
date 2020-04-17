@@ -7,11 +7,7 @@
 cd ${PBS_O_WORKDIR}
 
 # load snakemake module which is actually a python virtualenv that also loads pandas (and its own python3)
-#module load bbc/snakemake/snakemake-5.10.0
-#module load bbc/snakemake/snakemake-5.8.2
-. /secondary/projects/bbc/tools/kin_miniconda2/miniconda2/etc/profile.d/conda.sh
-#condame
-conda activate snakemake
+module load bbc/snakemake/snakemake-5.14.0
 
 # make temp directory for tools that need it
 if [ ! -d "./temp/" ]
@@ -41,6 +37,7 @@ snakemake \
 --use-envmodules \
 --jobs 100 \
 --cluster "qsub \
+-V \
 -q bbc \
 -l nodes=1:ppn={threads} \
 -l mem={resources.mem_mb}mb \
