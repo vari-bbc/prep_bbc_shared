@@ -14,11 +14,12 @@ properties:
   genome_fasta:
     type: string
     description: URL for genome fasta
+    pattern: ^\S+\.(fasta|fa)(\.gz)?$
 
   gene_gtf:
     type: string
     description: URL for GTF
-
+    pattern: ^\S+\.gtf(\.gz)?$
 
 required:
   - species
