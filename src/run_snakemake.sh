@@ -6,8 +6,7 @@
 
 cd ${PBS_O_WORKDIR}
 
-# load snakemake module which is actually a python virtualenv that also loads pandas (and its own python3)
-module load bbc/snakemake/snakemake-5.14.0
+module load bbc/snakemake/snakemake-5.17.0
 
 # make temp directory for tools that need it
 if [ ! -d "./temp/" ]
