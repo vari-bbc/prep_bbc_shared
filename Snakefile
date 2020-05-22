@@ -23,6 +23,7 @@ rule all:
         expand("data/{species.id}/sequence/{species.id}.fa.dict", species=species.itertuples()),
         expand("data/{species.id}/indexes/star/SA", species=species.itertuples()),
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
+        expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
 
 rule download_genome_fasta:
     input: 
@@ -191,5 +192,32 @@ rule bwa_idx:
         2>{log.stderr} 1>{log.stdout} 
             
         """
+
+rule bowtie2_idx:
+    input: 
+        genome_fa="data/{species_id}/sequence/{species_id}.fa",
+    output:
+        "data/{species_id}/indexes/bowtie2/{species_id}.1.bt2",
+        "data/{species_id}/indexes/bowtie2/{species_id}.2.bt2" 
+    log:
+        stdout="logs/bowtie2_idx/{species_id}.o",
+        stderr="logs/bowtie2_idx/{species_id}.e",
+    benchmark:
+        "benchmarks/bowtie2_idx/{species_id}.txt"
+    params:
+        outpref="data/{species_id}/indexes/bowtie2/{species_id}"
+    threads:8
+    resources:
+        mem_mb=100000
+    envmodules:
+        "bbc/bowtie2/bowtie2-2.4.1",
+        "bbc/python3/python-3.8.1"
+    shell:
+        """
+        bowtie2-build --threads {threads} {input.genome_fa} {params.outpref} \
+        2>{log.stderr} 1>{log.stdout}
+            
+        """
+
 
 
