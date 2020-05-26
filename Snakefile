@@ -24,6 +24,7 @@ rule all:
         expand("data/{species.id}/indexes/star/SA", species=species.itertuples()),
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
+        expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
 
 rule download_genome_fasta:
     input: 
@@ -219,5 +220,40 @@ rule bowtie2_idx:
             
         """
 
+# We need the genome fai as input because we check that the chromosome names are compatible between the blacklist and the genome
+rule download_blacklist:
+    input: 
+        genome_fai="data/{species_id}/sequence/{species_id}.fa.fai"
+    output:
+        "data/{species_id}/blacklist/{blacklist_id}.bed"
+    log:
+        stdout="logs/blacklist/{species_id}.{blacklist_id}.o",
+        stderr="logs/blacklist/{species_id}.{blacklist_id}.e",
 
+    benchmark:
+        "benchmarks/blacklist/{species_id}.{blacklist_id}.txt"
+    params:
+        url=lambda wildcards: species.loc[species.id == wildcards.species_id, 'blacklist'].values[0],
+        temp_chroms="data/{species_id}/blacklist/{blacklist_id}_chroms.temp"
+    threads:1
+    resources:
+        mem_mb=16000
+    envmodules:
+    shell:
+        """
+        # download the file
+        wget {params.url} -O {output} \
+        2>{log.stderr} 1>{log.stdout} 
+            
+        # if gzipped, decompress it. Need to give it a .gz suffix or gunzip will fail 
+        if (file {output} | grep -q 'gzip compressed' ) ; then
+            mv {output} {output}.gz
+            gunzip {output}.gz 2>>{log.stderr} 1>>{log.stdout}
+        fi
+           
+        # make sure chromosome names are compatible between genome fasta and blacklist
+        paste <(cut -f1 {input.genome_fai} | grep -Pi "^(chr)?[0-9XY]{{1,2}}" | sort) <(cut -f1 {output} | grep -Pi "^(chr)?[0-9XY]{{1,2}}" | sort | uniq) > {params.temp_chroms} 2>>{log.stderr}
+        perl -lane 'die "Chromosomes in genome fasta and blacklist do not match. See chroms.temp in blacklist directory." unless $F[0] eq $F[1]' {params.temp_chroms} 2>>{log.stderr} 1>>{log.stdout}
+        rm {params.temp_chroms}
+        """
 

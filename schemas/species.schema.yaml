@@ -21,6 +21,15 @@ properties:
     description: URL for GTF
     pattern: ^\S+\.gtf(\.gz)?$
 
+  blacklist:
+    type: string
+    description: URL for blacklist
+    pattern: ^\S+\.bed(\.gz)?$
+
+  blacklist_id:
+    type: string
+    description: id for renaming blacklist after downloading
+
 required:
   - species
   - id
