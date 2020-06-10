@@ -20,7 +20,7 @@ rule all:
         #expand("data/{species.id}/sequence/{species.id}.fa", species=species.itertuples()),
         #expand("data/{species.id}/annotation/{species.id}.gtf", species=species.itertuples()),
         expand("data/{species.id}/sequence/{species.id}.fa.fai", species=species.itertuples()),
-        expand("data/{species.id}/sequence/{species.id}.fa.dict", species=species.itertuples()),
+        expand("data/{species.id}/sequence/{species.id}.dict", species=species.itertuples()),
         expand("data/{species.id}/indexes/star/SA", species=species.itertuples()),
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
@@ -63,7 +63,7 @@ rule fai_and_dict:
         genome_fa="data/{species_id}/sequence/{species_id}.fa", 
     output:
         fai="data/{species_id}/sequence/{species_id}.fa.fai",
-        dict="data/{species_id}/sequence/{species_id}.fa.dict"
+        dict="data/{species_id}/sequence/{species_id}.dict"
         
     log:
         stdout="logs/fai_and_dict/{species_id}.o",
