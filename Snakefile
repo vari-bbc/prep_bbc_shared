@@ -24,6 +24,7 @@ rule all:
         expand("data/{species.id}/indexes/star/SA", species=species.itertuples()),
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
+        expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
 
 rule download_genome_fasta:
@@ -257,3 +258,43 @@ rule download_blacklist:
         rm {params.temp_chroms}
         """
 
+rule kb_lamanno:
+    input:
+        genome_fa="data/{species_id}/sequence/{species_id}.fa",
+        genes_gtf="data/{species_id}/annotation/{species_id}.gtf"
+    output:
+        idx="data/{species_id}/indexes/kb_lamanno/{species_id}.idx",
+        t2g="data/{species_id}/indexes/kb_lamanno/{species_id}.transcripts_to_genes.txt",
+        cdna="data/{species_id}/indexes/kb_lamanno/{species_id}.cdna.fa",
+        introns="data/{species_id}/indexes/kb_lamanno/{species_id}.intron.fa",
+        cdna_tr2cap="data/{species_id}/indexes/kb_lamanno/{species_id}.cdna_tr2cap.txt",
+        introns_tr2cap="data/{species_id}/indexes/kb_lamanno/{species_id}.intron_tr2cap.txt"
+    log:
+        stdout="logs/kb_lamanno/{species_id}.o",
+        stderr="logs/kb_lamanno/{species_id}.e",
+    benchmark:
+        "benchmarks/kb_lamanno/{species_id}.txt"
+    envmodules:
+        "bbc/kb-python/kb-python-0.24.4"
+    resources:
+        mem_mb=160000
+    shadow: "shallow"
+    threads:4
+    params:
+    shell:
+        """
+        # because kb ref 0.24.4 makes and uses a tmp/ in the working directory, there will be collisions if you run kb ref for multiple species at the same time. The files in tmp/ are generically named, sorted.fa and sorted.gtf. 
+        #The devel version of kb allows user to specify dustom tmp directory location but not in the latest release. 
+        # as a workaround we use the shadow rule feature of snakemake. "Shadow rules result in each execution of the rule to be run in isolated temporary directories."
+        kb ref \
+        -i {output.idx} \
+        -g {output.t2g} \
+        -f1 {output.cdna} \
+        -f2 {output.introns} \
+        -c1 {output.cdna_tr2cap} \
+        -c2 {output.introns_tr2cap} \
+        --lamanno \
+        {input.genome_fa} \
+        {input.genes_gtf} \
+        2>{log.stderr} 1>{log.stdout}
+        """
