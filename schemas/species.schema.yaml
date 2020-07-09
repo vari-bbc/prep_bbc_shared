@@ -20,6 +20,11 @@ properties:
     type: string
     description: URL for GTF
     pattern: ^\S+\.gtf(\.gz)?$
+  
+  tx_fasta:
+    type: string
+    description: URL for transcript fasta
+    pattern: ^\S+\.fa(sta)?(\.gz)?$
 
   blacklist:
     type: string
@@ -35,3 +40,4 @@ required:
   - id
   - genome_fasta
   - gene_gtf
+  - tx_fasta

@@ -19,6 +19,7 @@ rule all:
     input:
         #expand("data/{species.id}/sequence/{species.id}.fa", species=species.itertuples()),
         #expand("data/{species.id}/annotation/{species.id}.gtf", species=species.itertuples()),
+        expand("data/{species.id}/annotation/{species.id}.transcripts.fasta", species=species.itertuples()),
         expand("data/{species.id}/sequence/{species.id}.fa.fai", species=species.itertuples()),
         expand("data/{species.id}/sequence/{species.id}.dict", species=species.itertuples()),
         expand("data/{species.id}/indexes/star/SA", species=species.itertuples()),
@@ -128,6 +129,39 @@ rule download_genes_gtf:
         fi
            
         """
+
+rule download_tx_fasta:
+    input: 
+
+    output:
+        "data/{species_id}/annotation/{species_id}.transcripts.fasta"
+        
+    log:
+        stdout="logs/download_tx_fasta/{species_id}.o",
+        stderr="logs/download_tx_fasta/{species_id}.e",
+
+    benchmark:
+        "benchmarks/download_tx_fasta/{species_id}.txt"
+    params:
+        url=lambda wildcards: species.loc[species.id == wildcards.species_id,'tx_fasta'].values[0]
+    threads:1
+    resources:
+        mem_mb=16000
+    envmodules:
+    shell:
+        """
+        # download the file
+        wget {params.url} -O {output} \
+        2>{log.stderr} 1>{log.stdout} 
+            
+        # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
+        if (file {output} | grep -q 'gzip compressed' ) ; then
+            mv {output} {output}.gz
+            gunzip {output}.gz 2>>{log.stderr} 1>>{log.stdout}
+        fi
+           
+        """
+
 
 rule star_idx:
     input: 
