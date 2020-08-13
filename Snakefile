@@ -26,6 +26,7 @@ rule all:
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
         expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
+        expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
 
 rule download_genome_fasta:
@@ -332,3 +333,31 @@ rule kb_lamanno:
         {input.genes_gtf} \
         2>{log.stderr} 1>{log.stdout}
         """
+
+rule download_gatk_resource_bundle:
+    input: 
+    output:
+        touch=touch("data/{species_id}/gatk_resource_bundle/done.txt"),
+    log:
+        stdout="logs/gatk_resource_bundle/{species_id}.o",
+        stderr="logs/gatk_resource_bundle/{species_id}.e",
+
+    benchmark:
+        "benchmarks/gatk_resource_bundle/{species_id}.txt"
+    params:
+        url=lambda wildcards: species[species.id == wildcards.species_id].gatk_resource_bundle.values[0],
+        outdir="data/{species_id}/gatk_resource_bundle/"
+    threads:4
+    resources:
+        mem_mb=64000
+    envmodules:
+        "bbc/parallel/parallel-20191122",
+        "bbc/gsutil/gsutil-4.52"
+    shell:
+        """
+        # download all files from the directory. Ignore sub-directories.
+        gsutil ls $(echo {params.url} | perl -npe 's/https:\/\/storage.googleapis.com\//gs:\/\//') | grep -Pv '\/$' | perl -npe 's/gs:\/\//https:\/\/storage.googleapis.com\//' | parallel -k --will-cite --jobs {threads} 'wget -P {params.outdir} {{}}' \
+        2>{log.stderr} 1>{log.stdout} 
+            
+        """
+
