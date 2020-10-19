@@ -18,7 +18,7 @@ fi
 
 # save DAG job file with time stamp
 TIME=$(date "+%Y-%m-%d_%H.%M.%S")
-if [ ! -d "./logs/" ]
+if [ ! -d "./logs/runs" ]
 then
     mkdir -p ./logs/runs
 fi
