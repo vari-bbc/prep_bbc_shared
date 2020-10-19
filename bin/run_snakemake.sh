@@ -23,7 +23,7 @@ then
     mkdir -p ./logs/runs
 fi
 snakemake --use-conda -n > logs/runs/prep_bbc_shared_workflow_${TIME}.txt
-snakemake --dag | dot -Tpng > logs/runs/dag_${TIME}.png
+snakemake --dag | dot -Tpng > logs/dag.png
 snakemake --filegraph | dot -Tpng > logs/filegraph.png
 snakemake --rulegraph | dot -Tpng > logs/rulegraph.png
 
