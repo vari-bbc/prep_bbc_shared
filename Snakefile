@@ -50,13 +50,12 @@ rule download_genome_fasta:
     shell:
         """
         # download the file
-        wget {params.url} -O {output} \
-        2>{log.stderr} 1>{log.stdout} 
+        wget {params.url} -O {output} 
             
         # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
         if (file {output} | grep -q 'gzip compressed' ) ; then
             mv {output} {output}.gz
-            gunzip {output}.gz 2>>{log.stderr} 1>>{log.stdout}
+            gunzip {output}.gz
         fi
  
         """
@@ -84,8 +83,7 @@ rule fai_and_dict:
         "bbc/picard/picard-2.21.4-SNAPSHOT"
     shell:
         """
-        samtools faidx {input.genome_fa} \
-        2>{log.stderr} 1>{log.stdout} 
+        samtools faidx {input.genome_fa} 
             
         java \
         -Xms8g \
@@ -94,8 +92,7 @@ rule fai_and_dict:
         -jar $PICARD \
         CreateSequenceDictionary \
         REFERENCE={input.genome_fa} \
-        OUTPUT={output.dict} \
-        2>>{log.stderr} 1>>{log.stdout}
+        OUTPUT={output.dict} 
  
         """
 
@@ -108,7 +105,7 @@ rule download_genes_gtf:
     log:
         stdout="logs/download_genes_gtf/{species_id}.o",
         stderr="logs/download_genes_gtf/{species_id}.e",
-
+ 
     benchmark:
         "benchmarks/download_genes_gtf/{species_id}.txt"
     params:
@@ -120,13 +117,12 @@ rule download_genes_gtf:
     shell:
         """
         # download the file
-        wget {params.url} -O {output} \
-        2>{log.stderr} 1>{log.stdout} 
+        wget {params.url} -O {output} 
             
         # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
         if (file {output} | grep -q 'gzip compressed' ) ; then
             mv {output} {output}.gz
-            gunzip {output}.gz 2>>{log.stderr} 1>>{log.stdout}
+            gunzip {output}.gz
         fi
            
         """
@@ -152,13 +148,12 @@ rule download_tx_fasta:
     shell:
         """
         # download the file
-        wget {params.url} -O {output} \
-        2>{log.stderr} 1>{log.stdout} 
+        wget {params.url} -O {output} 
             
         # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
         if (file {output} | grep -q 'gzip compressed' ) ; then
             mv {output} {output}.gz
-            gunzip {output}.gz 2>>{log.stderr} 1>>{log.stdout}
+            gunzip {output}.gz 
         fi
            
         """
@@ -195,8 +190,7 @@ rule star_idx:
             --genomeDir {params.outpref} \
             --genomeFastaFiles {input.genome_fa} \
             --sjdbGTFfile {input.genes_gtf} \
-            --sjdbOverhang {params.sjdb_overhang} \
-            2>{log.stderr} 1>{log.stdout} 
+            --sjdbOverhang {params.sjdb_overhang} 
             
         """
 
@@ -225,8 +219,7 @@ rule bwa_idx:
         
         bwa index \
         -p {params.outpref} \
-        {input.genome_fa} \
-        2>{log.stderr} 1>{log.stdout} 
+        {input.genome_fa} 
             
         """
 
@@ -251,8 +244,7 @@ rule bowtie2_idx:
         "bbc/python3/python-3.8.1"
     shell:
         """
-        bowtie2-build --threads {threads} {input.genome_fa} {params.outpref} \
-        2>{log.stderr} 1>{log.stdout}
+        bowtie2-build --threads {threads} {input.genome_fa} {params.outpref} 
             
         """
 
@@ -278,18 +270,17 @@ rule download_blacklist:
     shell:
         """
         # download the file
-        wget {params.url} -O {output} \
-        2>{log.stderr} 1>{log.stdout} 
+        wget {params.url} -O {output} 
             
         # if gzipped, decompress it. Need to give it a .gz suffix or gunzip will fail 
         if (file {output} | grep -q 'gzip compressed' ) ; then
             mv {output} {output}.gz
-            gunzip {output}.gz 2>>{log.stderr} 1>>{log.stdout}
+            gunzip {output}.gz 
         fi
            
         # make sure chromosome names are compatible between genome fasta and blacklist
-        paste <(cut -f1 {input.genome_fai} | grep -Pi "^(chr)?[0-9XY]{{1,2}}" | sort) <(cut -f1 {output} | grep -Pi "^(chr)?[0-9XY]{{1,2}}" | sort | uniq) > {params.temp_chroms} 2>>{log.stderr}
-        perl -lane 'die "Chromosomes in genome fasta and blacklist do not match. See chroms.temp in blacklist directory." unless $F[0] eq $F[1]' {params.temp_chroms} 2>>{log.stderr} 1>>{log.stdout}
+        paste <(cut -f1 {input.genome_fai} | grep -Pi "^(chr)?[0-9XY]{{1,2}}" | sort) <(cut -f1 {output} | grep -Pi "^(chr)?[0-9XY]{{1,2}}" | sort | uniq) > {params.temp_chroms} 
+        perl -lane 'die "Chromosomes in genome fasta and blacklist do not match. See chroms.temp in blacklist directory." unless $F[0] eq $F[1]' {params.temp_chroms} 
         rm {params.temp_chroms}
         """
 
@@ -330,8 +321,7 @@ rule kb_lamanno:
         -c2 {output.introns_tr2cap} \
         --lamanno \
         {input.genome_fa} \
-        {input.genes_gtf} \
-        2>{log.stderr} 1>{log.stdout}
+        {input.genes_gtf} 
         """
 
 rule download_gatk_resource_bundle:
@@ -356,8 +346,7 @@ rule download_gatk_resource_bundle:
     shell:
         """
         # download all files from the directory. Ignore sub-directories.
-        gsutil ls $(echo {params.url} | perl -npe 's/https:\/\/storage.googleapis.com\//gs:\/\//') | grep -Pv '\/$' | perl -npe 's/gs:\/\//https:\/\/storage.googleapis.com\//' | parallel -k --will-cite --jobs {threads} 'wget -P {params.outdir} {{}}' \
-        2>{log.stderr} 1>{log.stdout} 
+        gsutil ls $(echo {params.url} | perl -npe 's/https:\/\/storage.googleapis.com\//gs:\/\//') | grep -Pv '\/$' | perl -npe 's/gs:\/\//https:\/\/storage.googleapis.com\//' | parallel -k --will-cite --jobs {threads} 'wget -P {params.outdir} {{}}' 
             
         """
 

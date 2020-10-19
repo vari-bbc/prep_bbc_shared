@@ -15,25 +15,21 @@ then
     mkdir ./temp/
 fi
 
-# irecotry for storing the job o and e files
-if [ ! -d "./error_files/" ]
-then
-    mkdir ./error_files/
-fi
 
 # save DAG job file with time stamp
 TIME=$(date "+%Y-%m-%d_%H.%M.%S")
 if [ ! -d "./logs/" ]
 then
-    mkdir -p ./logs/
+    mkdir -p ./logs/runs
 fi
-snakemake --use-conda -n > logs/prep_bbc_shared_workflow_${TIME}.txt
-snakemake --dag | dot -Tpng > logs/dag.png
+snakemake --use-conda -n > logs/runs/prep_bbc_shared_workflow_${TIME}.txt
+snakemake --dag | dot -Tpng > logs/runs/dag_${TIME}.png
 snakemake --filegraph | dot -Tpng > logs/filegraph.png
 snakemake --rulegraph | dot -Tpng > logs/rulegraph.png
 
 # run snakemake
 snakemake \
+--printshellcmds \
 --use-envmodules \
 --jobs 100 \
 --cluster "qsub \
@@ -42,6 +38,6 @@ snakemake \
 -l nodes=1:ppn={threads} \
 -l mem={resources.mem_mb}mb \
 -l walltime=100:00:00 \
--o error_files/ \
--e error_files/"
+-o {log.stdout} \
+-e {log.stderr}"
 
