@@ -3,6 +3,7 @@
 #PBS -N prep_bbc_shared_workflow
 #PBS -o logs/prep_bbc_shared_workflow.o
 #PBS -e logs/prep_bbc_shared_workflow.e
+#PBS -W umask=0022
 
 cd ${PBS_O_WORKDIR}
 
