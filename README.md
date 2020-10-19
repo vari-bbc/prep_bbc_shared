@@ -3,7 +3,7 @@
 This is a Snakemake pipeline for preparing index files and other shared resources for use in the BBC at VAI. The goal is to automate and standardize the creation of index files for a number of different tools and across different species.
 
 ## How to run
-`qsub -q bbc src/run_snakemake.sh`
+`qsub -q bbc bin/run_snakemake.sh`
 
 ## Directory structure
 The file structure is:
