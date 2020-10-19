@@ -9,10 +9,10 @@ min_version("5.11.0")
 
 ##### load config and sample sheets #####
 
-#configfile: "src/config.yaml"
+#configfile: "bin/config.yaml"
 #validate(config, schema="schemas/config.schema.yaml")
 
-species = pd.read_table("src/species.tsv", dtype=str).set_index(["id"], drop=False)
+species = pd.read_table("bin/species.tsv", dtype=str).set_index(["id"], drop=False)
 validate(species, "schemas/species.schema.yaml")
 
 rule all:
