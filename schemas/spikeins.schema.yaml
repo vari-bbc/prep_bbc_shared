@@ -1,0 +1,32 @@
+$schema: "http://json-schema.org/draft-06/schema#"
+
+description: Specifications for species + spikein refs.
+properties:
+
+  species:
+    type: string
+    description: species name. E.g. mouse, human
+
+  species_id:
+    type: string
+    description: ID of ref to combine with spikein
+
+  spikein_id:
+    type: string
+    description: spikein ID
+
+  spikein_fasta:
+    type: string
+    description: spikein fasta
+    pattern: ^\S+\.fa$
+  
+  spikein_gtf:
+    type: string
+    description: spikein gtf
+    pattern: ^\S+\.gtf$
+  
+required:
+  - species
+  - species_id
+  - spikein_id
+  - spikein_fasta

@@ -15,6 +15,9 @@ min_version("5.11.0")
 species = pd.read_table("bin/species.tsv", dtype=str).set_index(["id"], drop=False)
 validate(species, "schemas/species.schema.yaml")
 
+spikeins = pd.read_table("bin/spikeins.tsv", dtype=str)
+validate(spikeins, "schemas/spikeins.schema.yaml")
+
 rule all:
     input:
         #expand("data/{species.id}/sequence/{species.id}.fa", species=species.itertuples()),
@@ -28,6 +31,15 @@ rule all:
         expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
+        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/bwa/{spikein.species_id}_plus_{spikein.spikein_id}.bwt", spikein=spikeins.itertuples()),
+        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/sequence/{spikein.species_id}_plus_{spikein.spikein_id}.{ext}", spikein=spikeins.itertuples(), ext=["fa.fai","dict"]),
+        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/star/SA", spikein=spikeins[spikeins.spikein_gtf.notnull()].itertuples()),
+        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/bowtie2/{spikein.species_id}_plus_{spikein.spikein_id}.1.bt2", spikein=spikeins.itertuples()),
+        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/kb_lamanno/{spikein.species_id}_plus_{spikein.spikein_id}.idx", spikein=spikeins[spikeins.spikein_gtf.notnull()].itertuples()),
+
+# need this because both rules produce the same output (in Snakemake terminology, ambiguous rules)
+ruleorder: cat_spikein_seq > download_genome_fasta
+ruleorder: cat_spikein_gtf > download_genes_gtf
 
 rule download_genome_fasta:
     input: 
@@ -230,7 +242,8 @@ rule star_idx:
 
 rule bwa_idx:
     input: 
-        genome_fa="data/{species_id}/sequence/{species_id}.fa",
+        #genome_fa=lambda wildcards: "data/{species_id}/sequence/{species_id}.fa" if ({wildcards.species_id} in species['id'].values) else "data/withSpikein_{species_id}/sequence/{species_id}.fa",
+        genome_fa="data/{species_id}/sequence/{species_id}.fa" 
     output:
         "data/{species_id}/indexes/bwa/{species_id}.bwt",
         "data/{species_id}/indexes/bwa/{species_id}.sa" 
@@ -383,4 +396,50 @@ rule download_gatk_resource_bundle:
         gsutil ls $(echo {params.url} | perl -npe 's/https:\/\/storage.googleapis.com\//gs:\/\//') | grep -Pv '\/$' | perl -npe 's/gs:\/\//https:\/\/storage.googleapis.com\//' | parallel -k --will-cite --jobs {threads} 'wget -P {params.outdir} {{}}' 
             
         """
+
+
+rule cat_spikein_seq:
+    input:
+        species = "data/{species_id}/sequence/{species_id}.fa",
+        spikein = "bin/spikeins/sequence/{spikein_id}.fa"
+    output:
+        "data/{species_id}_plus_{spikein_id}/sequence/{species_id}_plus_{spikein_id}.fa",
+    log:
+        stdout="logs/cat_spikein_seq/{species_id}_plus_{spikein_id}.o",
+        stderr="logs/cat_spikein_seq/{species_id}_plus_{spikein_id}.e",
+
+    benchmark:
+        "benchmarks/cat_spikein_seq/{species_id}_plus_{spikein_id}.txt"
+    params:
+    threads:1
+    resources:
+        mem_gb=1
+    envmodules:
+    shell:
+        """
+        cat {input.species} {input.spikein} > {output}
+        """
+
+rule cat_spikein_gtf:
+    input:
+        species = "data/{species_id}/annotation/{species_id}.gtf",
+        spikein = "bin/spikeins/annotation/{spikein_id}.gtf"
+    output:
+        "data/{species_id}_plus_{spikein_id}/annotation/{species_id}_plus_{spikein_id}.gtf",
+    log:
+        stdout="logs/cat_spikein_gtf/{species_id}_plus_{spikein_id}.o",
+        stderr="logs/cat_spikein_gtf/{species_id}_plus_{spikein_id}.e",
+
+    benchmark:
+        "benchmarks/cat_spikein_gtf/{species_id}_plus_{spikein_id}.txt"
+    params:
+    threads:1
+    resources:
+        mem_gb=1
+    envmodules:
+    shell:
+        """
+        cat {input.species} {input.spikein} > {output}
+        """
+
 
