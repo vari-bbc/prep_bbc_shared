@@ -7,7 +7,9 @@
 
 cd ${PBS_O_WORKDIR}
 
-module load bbc/snakemake/snakemake-5.17.0
+snakemake_module="bbc/snakemake/snakemake-5.20.1"
+
+module load $snakemake_module
 
 # make temp directory for tools that need it
 if [ ! -d "./temp/" ]
@@ -29,15 +31,14 @@ snakemake --rulegraph | dot -Tpng > logs/rulegraph.png
 
 # run snakemake
 snakemake \
---printshellcmds \
+-p \
 --use-envmodules \
 --jobs 100 \
---cluster "qsub \
+--cluster "ssh ${PBS_O_LOGNAME}@submit 'module load ${snakemake_module}; cd ${PBS_O_WORKDIR}; qsub \
 -V \
 -q bbc \
 -l nodes=1:ppn={threads} \
 -l mem={resources.mem_gb}gb \
 -l walltime=100:00:00 \
 -o {log.stdout} \
--e {log.stderr}"
-
+-e {log.stderr}'"
