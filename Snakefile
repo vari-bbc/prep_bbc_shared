@@ -35,7 +35,7 @@ rule all:
         expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/sequence/{spikein.species_id}_plus_{spikein.spikein_id}.{ext}", spikein=spikeins.itertuples(), ext=["fa.fai","dict"]),
         expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/star/SA", spikein=spikeins[spikeins.spikein_gtf.notnull()].itertuples()),
         expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/bowtie2/{spikein.species_id}_plus_{spikein.spikein_id}.1.bt2", spikein=spikeins.itertuples()),
-        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/kb_lamanno/{spikein.species_id}_plus_{spikein.spikein_id}.idx", spikein=spikeins[spikeins.spikein_gtf.notnull()].itertuples()),
+        #expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/kb_lamanno/{spikein.species_id}_plus_{spikein.spikein_id}.idx", spikein=spikeins[spikeins.spikein_gtf.notnull()].itertuples()),
 
 # need this because both rules produce the same output (in Snakemake terminology, ambiguous rules)
 ruleorder: cat_spikein_seq > download_genome_fasta
