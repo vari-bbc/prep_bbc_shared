@@ -1,0 +1,3 @@
+species	species_id	spikein_ref_idfasta	spikein_fasta	spikein_gtf
+mouse	mm10_gencode	mm10_plus_lambda	bin/spikeins/.fa.gz	
+mouse	mm10_gencode	mm10_plus_ercc	bin/spikeins/.fa.gz	bin/spikeins/.gtf.gz
