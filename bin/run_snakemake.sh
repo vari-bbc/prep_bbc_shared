@@ -36,7 +36,7 @@ snakemake \
 -V \
 -q bbc \
 -l nodes=1:ppn={threads} \
--l mem={resources.mem_mb}mb \
+-l mem={resources.mem_gb}gb \
 -l walltime=100:00:00 \
 -o {log.stdout} \
 -e {log.stderr}"

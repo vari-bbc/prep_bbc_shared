@@ -45,7 +45,7 @@ rule download_genome_fasta:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'genome_fasta'].values[0]
     threads:1
     resources:
-        mem_mb=16000
+        mem_gb=16
     envmodules:
     shell:
         """
@@ -77,7 +77,7 @@ rule fai_and_dict:
         temp="temp/"
     threads:1
     resources:
-        mem_mb=30000
+        mem_gb=30
     envmodules:
         "bbc/samtools/samtools-1.9",
         "bbc/picard/picard-2.21.4-SNAPSHOT"
@@ -87,7 +87,7 @@ rule fai_and_dict:
             
         java \
         -Xms8g \
-        -Xmx{resources.mem_mb}m \
+        -Xmx{resources.mem_gb}g \
         -Djava.io.tmpdir={params.temp} \
         -jar $PICARD \
         CreateSequenceDictionary \
@@ -112,7 +112,7 @@ rule download_genes_gtf:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'gene_gtf'].values[0]
     threads:1
     resources:
-        mem_mb=16000
+        mem_gb=16
     envmodules:
     shell:
         """
@@ -146,7 +146,7 @@ rule download_basic_genes_gtf:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'gene_basic_gtf'].values[0]
     threads:1
     resources:
-        mem_mb=16000
+        mem_gb=16
     envmodules:
     shell:
         """
@@ -177,7 +177,7 @@ rule download_tx_fasta:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'tx_fasta'].values[0]
     threads:1
     resources:
-        mem_mb=16000
+        mem_gb=16
     envmodules:
     shell:
         """
@@ -213,7 +213,7 @@ rule star_idx:
         outpref="data/{species_id}/indexes/star/"
     threads:16
     resources:
-        mem_mb=100000
+        mem_gb=100
     envmodules:
         "bbc/STAR/STAR-2.7.3a"
     shell:
@@ -244,7 +244,7 @@ rule bwa_idx:
         outpref="data/{species_id}/indexes/bwa/{species_id}"
     threads:4
     resources:
-        mem_mb=100000
+        mem_gb=100
     envmodules:
         "bbc/bwa/bwa-0.7.17"
     shell:
@@ -272,7 +272,7 @@ rule bowtie2_idx:
         outpref="data/{species_id}/indexes/bowtie2/{species_id}"
     threads:8
     resources:
-        mem_mb=100000
+        mem_gb=100
     envmodules:
         "bbc/bowtie2/bowtie2-2.4.1",
         "bbc/python3/python-3.8.1"
@@ -299,7 +299,7 @@ rule download_blacklist:
         temp_chroms="data/{species_id}/blacklist/{blacklist_id}_chroms.temp"
     threads:1
     resources:
-        mem_mb=16000
+        mem_gb=16
     envmodules:
     shell:
         """
@@ -337,7 +337,7 @@ rule kb_lamanno:
     envmodules:
         "bbc/kb-python/kb-python-0.24.4"
     resources:
-        mem_mb=160000
+        mem_gb=160
     shadow: "shallow"
     threads:4
     params:
@@ -373,7 +373,7 @@ rule download_gatk_resource_bundle:
         outdir="data/{species_id}/gatk_resource_bundle/"
     threads:4
     resources:
-        mem_mb=64000
+        mem_gb=64
     envmodules:
         "bbc/parallel/parallel-20191122",
         "bbc/gsutil/gsutil-4.52"
