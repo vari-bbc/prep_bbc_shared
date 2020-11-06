@@ -21,6 +21,11 @@ properties:
     description: URL for GTF
     pattern: ^\S+\.gtf(\.gz)?$
   
+  gene_basic_gtf:
+    type: string
+    description: URL for basic annotation GTF
+    pattern: ^\S+\.gtf(\.gz)?$
+  
   tx_fasta:
     type: string
     description: URL for transcript fasta

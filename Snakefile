@@ -18,7 +18,7 @@ validate(species, "schemas/species.schema.yaml")
 rule all:
     input:
         #expand("data/{species.id}/sequence/{species.id}.fa", species=species.itertuples()),
-        #expand("data/{species.id}/annotation/{species.id}.gtf", species=species.itertuples()),
+        expand("data/{species_id}/annotation/{species_id}.basic.gtf", species_id=species[species.gene_basic_gtf.notnull()]['id'].values),
         expand("data/{species.id}/annotation/{species.id}.transcripts.fasta", species=species.itertuples()),
         expand("data/{species.id}/sequence/{species.id}.fa.fai", species=species.itertuples()),
         expand("data/{species.id}/sequence/{species.id}.dict", species=species.itertuples()),
@@ -110,6 +110,40 @@ rule download_genes_gtf:
         "benchmarks/download_genes_gtf/{species_id}.txt"
     params:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'gene_gtf'].values[0]
+    threads:1
+    resources:
+        mem_mb=16000
+    envmodules:
+    shell:
+        """
+        # download the file
+        wget {params.url} -O {output} 
+            
+        # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
+        if (file {output} | grep -q 'gzip compressed' ) ; then
+            mv {output} {output}.gz
+            gunzip {output}.gz
+        fi
+           
+        """
+
+rule download_basic_genes_gtf:
+    """
+    Download gtf with only the representative transcript for each gene and focuses on protein coding genes.
+    """
+    input: 
+
+    output:
+        "data/{species_id}/annotation/{species_id}.basic.gtf"
+        
+    log:
+        stdout="logs/download_basic_genes_gtf/{species_id}.o",
+        stderr="logs/download_basic_genes_gtf/{species_id}.e",
+ 
+    benchmark:
+        "benchmarks/download_basic_genes_gtf/{species_id}.txt"
+    params:
+        url=lambda wildcards: species.loc[species.id == wildcards.species_id,'gene_basic_gtf'].values[0]
     threads:1
     resources:
         mem_mb=16000
