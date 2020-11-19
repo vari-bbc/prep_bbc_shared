@@ -1,0 +1,8 @@
+id	species_ids	species_prefs	spikein_ids
+mm10_gencode_plus_ERCC92	mm10_gencode		ERCC92
+mm10_gencode_plus_lambda	mm10_gencode		lambda
+hg38_gencode_plus_ERCC92	hg38_gencode		ERCC92
+hg38_gencode_plus_lambda	hg38_gencode		lambda
+mm10_gencode_plus_e.coli-K12-mg1665_ensembl	mm10_gencode,e.coli-K12-mg1665_ensembl	mm,ec	
+e.coli-K12-mg1665_ensembl_plus_lambda	e.coli-K12-mg1665_ensembl		lambda
+e.coli-K12-mg1665_ensembl_plus_ERCC92	e.coli-K12-mg1665_ensembl		ERCC92

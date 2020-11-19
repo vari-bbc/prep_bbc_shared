@@ -1,0 +1,24 @@
+$schema: "http://json-schema.org/draft-06/schema#"
+
+description: Specifications for hybrid genome info.
+properties:
+  id:
+    type: string
+    description: ID for the hybrid genome. _plus_ must be a part of the ID. e.g. mm10_gencode_plus_hg38_gencode or mm10_gencode_plus_ERCC92
+    pattern: .+_plus_.+
+
+  species_ids:
+    type: string
+    description: comma-separated list of species_ids. Must correspond to species_ids in species.tsv.
+
+  species_prefs:
+    type: string
+    description: comma-separated list of species prefixes to prepend to pseudomolecules/contigs. Req'd if multiple species_ids specified.
+
+  spikein_ids:
+    type: string
+    description: comma-separated list of spike-in IDs. Must correspond to spikein_id in spikein.tsv.
+  
+required:
+  - id
+  - species_ids

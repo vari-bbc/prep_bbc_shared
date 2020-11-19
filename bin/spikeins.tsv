@@ -1,5 +1,3 @@
-species	species_id	spikein_id	spikein_fasta	spikein_gtf
-mouse	mm10_gencode	lambda	lambda.fa	
-mouse	mm10_gencode	ERCC92	ERCC92.fa	ERCC92.gtf
-human	hg38_gencode	lambda	lambda.fa	
-human	hg38_gencode	ERCC92	ERCC92.fa	ERCC92.gtf
+spikein_id	spikein_fasta	spikein_gtf
+lambda	lambda.fa	
+ERCC92	ERCC92.fa	ERCC92.gtf

@@ -18,6 +18,9 @@ validate(species, "schemas/species.schema.yaml")
 spikeins = pd.read_table("bin/spikeins.tsv", dtype=str)
 validate(spikeins, "schemas/spikeins.schema.yaml")
 
+hybrid_genomes = pd.read_table("bin/hybrid_genomes.tsv", dtype=str)
+validate(hybrid_genomes, "schemas/hybrid_genomes.schema.yaml")
+
 rule all:
     input:
         #expand("data/{species.id}/sequence/{species.id}.fa", species=species.itertuples()),
@@ -31,22 +34,21 @@ rule all:
         expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
-        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/bwa/{spikein.species_id}_plus_{spikein.spikein_id}.bwt", spikein=spikeins.itertuples()),
-        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/sequence/{spikein.species_id}_plus_{spikein.spikein_id}.{ext}", spikein=spikeins.itertuples(), ext=["fa.fai","dict"]),
-        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/star/SA", spikein=spikeins[spikeins.spikein_gtf.notnull()].itertuples()),
-        expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/bowtie2/{spikein.species_id}_plus_{spikein.spikein_id}.1.bt2", spikein=spikeins.itertuples()),
-        #expand("data/{spikein.species_id}_plus_{spikein.spikein_id}/indexes/kb_lamanno/{spikein.species_id}_plus_{spikein.spikein_id}.idx", spikein=spikeins[spikeins.spikein_gtf.notnull()].itertuples()),
+        expand("data/{hybrid_genome_id}/indexes/bwa/{hybrid_genome_id}.bwt", hybrid_genome_id=hybrid_genomes.id),
+        expand("data/{hybrid_genome_id}/sequence/{hybrid_genome_id}.{ext}", hybrid_genome_id=hybrid_genomes.id, ext=["fa.fai","dict"]),
+        expand("data/{hybrid_genome_id}/indexes/star/SA", hybrid_genome_id=hybrid_genomes.id),
+        expand("data/{hybrid_genome_id}/indexes/bowtie2/{hybrid_genome_id}.1.bt2", hybrid_genome_id=hybrid_genomes.id)
 
 # need this because both rules produce the same output (in Snakemake terminology, ambiguous rules)
-ruleorder: cat_spikein_seq > download_genome_fasta
-ruleorder: cat_spikein_gtf > download_genes_gtf
+ruleorder: cat_hybrid_seq > download_genome_fasta
+ruleorder: cat_hybrid_gtf > download_genes_gtf
 
 rule download_genome_fasta:
     input: 
 
     output:
         "data/{species_id}/sequence/{species_id}.fa"
-        
+
     log:
         stdout="logs/download_genome_fasta/{species_id}.o",
         stderr="logs/download_genome_fasta/{species_id}.e",
@@ -398,18 +400,101 @@ rule download_gatk_resource_bundle:
         """
 
 
-rule cat_spikein_seq:
+rule add_species_prefs_for_hybrid_fa:
+    """
+    Add prefix to species fasta to allow concatenation without duplicate sequence names.
+    """
     input:
-        species = "data/{species_id}/sequence/{species_id}.fa",
-        spikein = "bin/spikeins/sequence/{spikein_id}.fa"
+        "data/{species_id}/sequence/{species_id}.fa",
     output:
-        "data/{species_id}_plus_{spikein_id}/sequence/{species_id}_plus_{spikein_id}.fa",
+        "data/{species_id}/add_species_prefs_for_hybrid/{species_id}.{species_pref}_prefixed.fa",
     log:
-        stdout="logs/cat_spikein_seq/{species_id}_plus_{spikein_id}.o",
-        stderr="logs/cat_spikein_seq/{species_id}_plus_{spikein_id}.e",
+        stdout="logs/add_species_prefs_for_hybrid_fa/{species_id}.{species_pref}.o",
+        stderr="logs/add_species_prefs_for_hybrid_fa/{species_id}.{species_pref}.e"
+    benchmark:
+        "benchmarks/add_species_prefs_for_hybrid_fa/{species_id}.{species_pref}.txt"
+    params:
+        pref="{species_pref}"
+    threads:1
+    resources:
+        mem_gb=1
+    envmodules:
+    shell:
+        """
+        # add species prefix to fasta
+        perl -npe 's/^>/>{params.pref}_/' {input} > {output}
+        """
+
+rule add_species_prefs_for_hybrid_gtf:
+    """
+    Add prefix to species gtf to allow concatenation without duplicate sequence names.
+    """
+    input:
+        "data/{species_id}/annotation/{species_id}.gtf"
+    output:
+        "data/{species_id}/add_species_prefs_for_hybrid/{species_id}.{species_pref}_prefixed.gtf"
+    log:
+        stdout="logs/add_species_prefs_for_hybrid_gtf/{species_id}.{species_pref}.o",
+        stderr="logs/add_species_prefs_for_hybrid_gtf/{species_id}.{species_pref}.e"
+    benchmark:
+        "benchmarks/add_species_prefs_for_hybrid_gtf/{species_id}.{species_pref}.txt"
+    params:
+        pref="{species_pref}"
+    threads:1
+    resources:
+        mem_gb=1
+    envmodules:
+    shell:
+        """
+        # add species prefix to gtf
+        perl -npe 'next if /^#/; $_ = "{params.pref}_".$_' {input} > {output}
+        """
+
+def get_species_and_spikein_seqs(wildcards):
+    # get the comma-separated species ids and prefixes
+    species_ids = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['species_ids'].values[0]
+    species_prefs = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['species_prefs'].values[0]
+    
+    # split into a list
+    species_ids_list = species_ids.split(",")
+
+    if len(species_ids_list) > 1:
+        species_prefs_list = species_prefs.split(",")
+        
+        # if multiple species, get the species-prefixed files
+        species_paths = expand("data/{id}/add_species_prefs_for_hybrid/{id}.{pref}_prefixed.fa", zip, id=species_ids_list, pref=species_prefs_list)    
+    else:
+        # else get the original species files
+        species_paths = ["data/{id}/sequence/{id}.fa".format(id=species_ids)]
+
+    # get spikein ids
+    spikein_ids = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['spikein_ids'].values[0]
+
+    if not pd.isnull(spikein_ids):
+        # split into a list
+        spikein_ids_list = spikein_ids.split(",")
+        # get the corresponding filenames
+        spikein_filenames = [spikeins[spikeins.spikein_id == spikein_id]['spikein_fasta'].values[0] for spikein_id in spikein_ids_list]
+        # setup paths
+        spikein_paths = expand("bin/spikeins/sequence/{spikein_file}", spikein_file = spikein_filenames)
+
+        input_paths = species_paths + spikein_paths
+    else:
+        input_paths = species_paths
+
+    return input_paths
+
+rule cat_hybrid_seq:
+    input:
+        get_species_and_spikein_seqs
+    output:
+        "data/{hybrid_id, .+_plus_.+}/sequence/{hybrid_id}.fa",
+    log:
+        stdout="logs/cat_hybrid_seq/{hybrid_id}.o",
+        stderr="logs/cat_hybrid_seq/{hybrid_id}.e",
 
     benchmark:
-        "benchmarks/cat_spikein_seq/{species_id}_plus_{spikein_id}.txt"
+        "benchmarks/cat_hybrid_seq/{hybrid_id}.txt"
     params:
     threads:1
     resources:
@@ -417,21 +502,56 @@ rule cat_spikein_seq:
     envmodules:
     shell:
         """
-        cat {input.species} {input.spikein} > {output}
+        cat {input} > {output}
         """
 
-rule cat_spikein_gtf:
+
+def get_species_and_spikein_gtfs(wildcards):
+    # get the comma-separated species ids and prefixes
+    species_ids = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['species_ids'].values[0]
+    species_prefs = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['species_prefs'].values[0]
+    
+    # split into a list
+    species_ids_list = species_ids.split(",")
+
+    if len(species_ids_list) > 1:
+        species_prefs_list = species_prefs.split(",")
+
+        # if multiple species, get the species-prefixed files
+        species_paths = expand("data/{id}/add_species_prefs_for_hybrid/{id}.{pref}_prefixed.gtf", zip, id=species_ids_list, pref=species_prefs_list)    
+    else:
+        # else get the original species files
+        species_paths = ["data/{id}/annotation/{id}.gtf".format(id=species_ids)]
+    
+    # get spikein ids
+    spikein_ids = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['spikein_ids'].values[0]
+
+    if not pd.isnull(spikein_ids):
+        # split into a list
+        spikein_ids_list = spikein_ids.split(",")
+        # get the corresponding filenames
+        spikein_filenames = [spikeins[spikeins.spikein_id == spikein_id]['spikein_gtf'].values[0] for spikein_id in spikein_ids_list]
+        # setup paths
+        spikein_paths = ["bin/spikeins/annotation/{filename}".format(filename=x) for x in spikein_filenames if str(x) != 'nan']
+
+        input_paths = species_paths + spikein_paths
+    else:
+        input_paths = species_paths
+    
+    return input_paths
+
+# need to keep cat_hybrid_seq and cat_hybrid_gtf separate because some spikeins don't have a GTF file.
+rule cat_hybrid_gtf:
     input:
-        species = "data/{species_id}/annotation/{species_id}.gtf",
-        spikein = "bin/spikeins/annotation/{spikein_id}.gtf"
+        get_species_and_spikein_gtfs
     output:
-        "data/{species_id}_plus_{spikein_id}/annotation/{species_id}_plus_{spikein_id}.gtf",
+        "data/{hybrid_id, .+_plus_.+}/annotation/{hybrid_id}.gtf",
     log:
-        stdout="logs/cat_spikein_gtf/{species_id}_plus_{spikein_id}.o",
-        stderr="logs/cat_spikein_gtf/{species_id}_plus_{spikein_id}.e",
+        stdout="logs/cat_hybrid_gtf/{hybrid_id}.o",
+        stderr="logs/cat_hybrid_gtf/{hybrid_id}.e",
 
     benchmark:
-        "benchmarks/cat_spikein_gtf/{species_id}_plus_{spikein_id}.txt"
+        "benchmarks/cat_hybrid_gtf/{hybrid_id}.txt"
     params:
     threads:1
     resources:
@@ -439,7 +559,7 @@ rule cat_spikein_gtf:
     envmodules:
     shell:
         """
-        cat {input.species} {input.spikein} > {output}
+        cat {input} > {output}
         """
 
 
