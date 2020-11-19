@@ -15,6 +15,9 @@ min_version("5.11.0")
 species = pd.read_table("bin/species.tsv", dtype=str).set_index(["id"], drop=False)
 validate(species, "schemas/species.schema.yaml")
 
+# _plus_ is reserved to indicate hybrid genomes or genomes plus spikein
+assert (not any(species.id.str.contains('_plus_'))), "_plus_ is reserved to indicate hybrid genomes or genomes plus spikein."
+
 spikeins = pd.read_table("bin/spikeins.tsv", dtype=str)
 validate(spikeins, "schemas/spikeins.schema.yaml")
 
