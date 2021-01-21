@@ -36,14 +36,19 @@ The file structure is:
 
 The pipeline is guided by a 'species' file that specifies the URLs for the genome fastas and the gene annotations, and could be augmented to include other things for future rules. The current columns are:
 
-| Column #     | Column name      | Description                                                                                                   |
-|----------    |--------------    |-----------------------------------------------------------------------------------------------------------    |
-| 1.           | species          | Common name for the species e.g. mouse, human. This does not have to be unique.                               |
-| 2.           | id               | Unique ID for the species e.g. mm10_gencode or hg38_gencode. This is used for directory and file naming.      |
-| 3.           | genome_fasta     | URL for genome fasta.                                                                                         |
-| 4.           | gene_gtf         | URL for GTF.                                                                                                  |
-| 5.           | blacklist        | URL for ENCODE blacklist.                                                                                     |
-| 6.           | blacklist_id     | ID for renaming blacklist after downloading. Identifies the version of the blacklist e.g. hg38_encode_v3.     |
+| Column #     | Column name              | Description                                                                                                   |
+|----------    |--------------            |-----------------------------------------------------------------------------------------------------------    |
+| 1.           | species                  | Common name for the species e.g. mouse, human. This does not have to be unique.                               |
+| 2.           | id                       | Unique ID for the species e.g. mm10_gencode or hg38_gencode. This is used for directory and file naming.      |
+| 3.           | genome_fasta             | URL for genome fasta.                                                                                         |
+| 4.           | gene_gtf                 | URL for GTF.                                                                                                  |
+| 5.           | blacklist                | URL for ENCODE blacklist.                                                                                     |
+| 6.           | blacklist_id             | ID for renaming blacklist after downloading. Identifies the version of the blacklist e.g. hg38_encode_v3.     |
+| 7.           | gatk_resource_bundle     | URL for GATK resource bundle. _Optional_.                                                                     |
+| 8.           | gene_basic_gtf           | URL for GTF for 'basic' annotations as defined by GENCODE. Not used for indexing.  _Optional_.                |
+
+
+gatk_resource_bundlegene_basic_gtf
 
 The layout of this file and the pipeline allows for stright-forward the specification of different variants of references for the same species. For example, there could be a row for 'human hg38_ensembl' and another row for 'human hg19_ensembl' in the species file. This would result in the creation of two sub-directories: 'hg38_ensembl' and 'hg19_ensembl', with their own genome fastas, annotation files and index files.
 
