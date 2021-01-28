@@ -48,8 +48,6 @@ The pipeline is guided by a 'species' file that specifies the URLs for the genom
 | 8.           | gene_basic_gtf           | URL for GTF for 'basic' annotations as defined by GENCODE. Not used for indexing.  _Optional_.                |
 
 
-gatk_resource_bundlegene_basic_gtf
-
 The layout of this file and the pipeline allows for stright-forward the specification of different variants of references for the same species. For example, there could be a row for 'human hg38_ensembl' and another row for 'human hg19_ensembl' in the species file. This would result in the creation of two sub-directories: 'hg38_ensembl' and 'hg19_ensembl', with their own genome fastas, annotation files and index files.
 
 One may wish to make a nonstandard variation of the hg38 reference using a customized genome fasta. In this case, one could supply the genome fasta file manually in the appropriately named subdirectory and the Snakemake pipeline would skip the fasta downloading rule. Similarly, one could use a custom GTF and move it manually into the appropriate subdirectory and the pipeline will skip downloading the GTF. One could also place a symlink in place of the fasta or GTF files.
@@ -58,3 +56,15 @@ One may wish to make a nonstandard variation of the hg38 reference using a custo
 
 ![Workflow](./logs/rulegraph.png)
 
+## Hybrid genomes and spike-in references
+
+Species specified in `species.tsv` can be `cat` together for hybrid reference genomes. Similarly, `bin/spikeins/` contains sequences and annotations for spikein sequences that can be combined with any species in the `species.tsv` file. This feature depends on the `bin/hybrid_genomes.tsv` file. The columns for `hybrid_genomes.tsv`are as follows:
+
+| Column #     | Column name              | Description                                                                                                   |
+|----------    |--------------            |-----------------------------------------------------------------------------------------------------------    |
+| 1.           | id                       | A unique ID for the hybrid genome. Use the format 'species_plus_spikin'. e.g. mm10_gencode_plus_ERCC92        |
+| 2.           | species_ids              | Comma-separated list of species ids to include. Must match 'id' column in 'species.tsv'.                      |
+| 3.           | species_prefs            | Comma-separated list of prefices to prepend to species chromosomes. Length must match the # of species in 'species_id' but actually the original chromosome names are retained for the first species.                                                           |
+| 4.           | spikein_ids              | Comma-separated list of spike-in IDs. Must match 'spikein_id' column in 'spikeins.tsv'.                       |
+
+Because the chromosome names are not changed for the first species in a hybrid reference, it should retain compatibility with blacklists and other resources for the original reference.
