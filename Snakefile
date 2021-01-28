@@ -35,12 +35,13 @@ rule all:
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
         expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
+        expand("data/{species.id}/indexes/bismark/{species.id}.fa", species=species.itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
         expand("data/{hybrid_genome_id}/indexes/bwa/{hybrid_genome_id}.bwt", hybrid_genome_id=hybrid_genomes.id),
         expand("data/{hybrid_genome_id}/sequence/{hybrid_genome_id}.{ext}", hybrid_genome_id=hybrid_genomes.id, ext=["fa.fai","dict"]),
         expand("data/{hybrid_genome_id}/indexes/star/SA", hybrid_genome_id=hybrid_genomes.id),
-        expand("data/{hybrid_genome_id}/indexes/bowtie2/{hybrid_genome_id}.1.bt2", hybrid_genome_id=hybrid_genomes.id)
+        expand("data/{hybrid_genome_id}/indexes/bowtie2/{hybrid_genome_id}.1.bt2", hybrid_genome_id=hybrid_genomes.id),
 
 # need this because both rules produce the same output (in Snakemake terminology, ambiguous rules)
 ruleorder: cat_hybrid_seq > download_genome_fasta
@@ -297,6 +298,35 @@ rule bowtie2_idx:
     shell:
         """
         bowtie2-build --threads {threads} {input.genome_fa} {params.outpref} 
+            
+        """
+
+
+bismark_threads=16 # must be even number
+rule bismark_idx:
+    input: 
+        genome_fa="data/{species_id}/sequence/{species_id}.fa",
+    output:
+        "data/{species_id}/indexes/bismark/{species_id}.fa",
+        directory("data/{species_id}/indexes/bismark/Bisulfite_Genome")
+    log:
+        stdout="logs/bismark_idx/{species_id}.o",
+        stderr="logs/bismark_idx/{species_id}.e",
+    benchmark:
+        "benchmarks/bismark_idx/{species_id}.txt"
+    params:
+        outdir="data/{species_id}/indexes/bismark/",
+        parallel=int(bismark_threads/2)
+    threads:bismark_threads
+    resources:
+        mem_gb=100
+    envmodules:
+        "bbc/bismark/bismark-0.23.0"
+    shell:
+        """
+        ln -rs {input.genome_fa} {output[0]}
+
+        bismark_genome_preparation --bowtie2 --parallel {params.parallel} {params.outdir}
             
         """
 
