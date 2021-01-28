@@ -3,7 +3,7 @@
 #PBS -N prep_bbc_shared_workflow
 #PBS -o logs/prep_bbc_shared_workflow.o
 #PBS -e logs/prep_bbc_shared_workflow.e
-#PBS -W umask=0022
+#PBS -W umask=002
 
 cd ${PBS_O_WORKDIR}
 
@@ -40,6 +40,6 @@ snakemake \
 -l nodes=1:ppn={threads} \
 -l mem={resources.mem_gb}gb \
 -l walltime=100:00:00 \
--W umask=0022 \
+-W umask=002 \
 -o {log.stdout} \
 -e {log.stderr}'"
