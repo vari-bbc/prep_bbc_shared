@@ -494,8 +494,13 @@ def get_species_and_spikein_seqs(wildcards):
     if len(species_ids_list) > 1:
         species_prefs_list = species_prefs.split(",")
         
-        # if multiple species, get the species-prefixed files
-        species_paths = expand("data/{id}/add_species_prefs_for_hybrid/{id}.{pref}_prefixed.fa", zip, id=species_ids_list, pref=species_prefs_list)    
+        # get the original files for the first species
+        first_species_paths = ["data/{id}/sequence/{id}.fa".format(id=species_ids_list[0])]
+
+        # get the species-prefixed files for the 2nd and up to the last species
+        other_species_paths = expand("data/{id}/add_species_prefs_for_hybrid/{id}.{pref}_prefixed.fa", zip, id=species_ids_list[1:], pref=species_prefs_list[1:])
+
+        species_paths = first_species_paths + other_species_paths
     else:
         # else get the original species files
         species_paths = ["data/{id}/sequence/{id}.fa".format(id=species_ids)]
@@ -549,9 +554,15 @@ def get_species_and_spikein_gtfs(wildcards):
 
     if len(species_ids_list) > 1:
         species_prefs_list = species_prefs.split(",")
+        
+        # get the original files for the first species
+        first_species_paths = ["data/{id}/annotation/{id}.gtf".format(id=species_ids_list[0])]
 
-        # if multiple species, get the species-prefixed files
-        species_paths = expand("data/{id}/add_species_prefs_for_hybrid/{id}.{pref}_prefixed.gtf", zip, id=species_ids_list, pref=species_prefs_list)    
+        # get the species-prefixed files for the 2nd and up to the last species
+        other_species_paths = expand("data/{id}/add_species_prefs_for_hybrid/{id}.{pref}_prefixed.gtf", zip, id=species_ids_list[1:], pref=species_prefs_list[1:])
+
+        species_paths = first_species_paths + other_species_paths
+
     else:
         # else get the original species files
         species_paths = ["data/{id}/annotation/{id}.gtf".format(id=species_ids)]
