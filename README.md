@@ -2,10 +2,19 @@
 
 This is a Snakemake pipeline for preparing index files and other shared resources for use in the BBC at VAI. The goal is to automate and standardize the creation of index files for a number of different tools and across different species.
 
-## How to run
+Table of Contents
+=================
+
+   * [How to run](#how-to-run)
+   * [Directory structure](#directory-structure)
+   * [The 'species' file](#the-species-file)
+   * [The workflow](#the-workflow)
+   * [Hybrid genomes and spike-in references](#hybrid-genomes-and-spike-in-references)
+
+# How to run
 `qsub -q bbc bin/run_snakemake.sh`
 
-## Directory structure
+# Directory structure
 The file structure is:
 
 * Date of creation
@@ -32,7 +41,7 @@ The file structure is:
             * bwa/
             * bowtie2/
 
-## The 'species' file
+# The 'species' file
 
 The pipeline is guided by a 'species' file that specifies the URLs for the genome fastas and the gene annotations, and could be augmented to include other things for future rules. The current columns are:
 
@@ -52,11 +61,11 @@ The layout of this file and the pipeline allows for stright-forward the specific
 
 One may wish to make a nonstandard variation of the hg38 reference using a customized genome fasta. In this case, one could supply the genome fasta file manually in the appropriately named subdirectory and the Snakemake pipeline would skip the fasta downloading rule. Similarly, one could use a custom GTF and move it manually into the appropriate subdirectory and the pipeline will skip downloading the GTF. One could also place a symlink in place of the fasta or GTF files.
 
-## The workflow
+# The workflow
 
 ![Workflow](./logs/rulegraph.png)
 
-## Hybrid genomes and spike-in references
+# Hybrid genomes and spike-in references
 
 Species specified in `species.tsv` can be `cat` together for hybrid reference genomes. Similarly, `bin/spikeins/` contains sequences and annotations for spikein sequences that can be combined with any species in the `species.tsv` file. This feature depends on the `bin/hybrid_genomes.tsv` file. The columns for `hybrid_genomes.tsv`are as follows:
 
