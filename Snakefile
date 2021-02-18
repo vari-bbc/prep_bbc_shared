@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import re
+import time
 from snakemake.utils import validate, min_version
 ##### set minimum snakemake version #####
 min_version("5.28.0")
@@ -24,7 +25,14 @@ validate(spikeins, "schemas/spikeins.schema.yaml")
 hybrid_genomes = pd.read_table("bin/hybrid_genomes.tsv", dtype=str)
 validate(hybrid_genomes, "schemas/hybrid_genomes.schema.yaml")
 
+
+timestr = time.strftime("%Y%m%d-%H.%M.%S")
+timestamp_dir = "/secondary/projects/bbc/research/prep_bbc_shared_timestamped/"
 rule all:
+    input:
+       "{timestamp_dir}{timestr}/rsync.done".format(timestamp_dir=timestamp_dir, timestr=timestr)
+
+rule timestamp_backup:
     input:
         #expand("data/{species.id}/sequence/{species.id}.fa", species=species.itertuples()),
         expand("data/{species_id}/annotation/{species_id}.basic.gtf", species_id=species[species.gene_basic_gtf.notnull()]['id'].values),
@@ -42,6 +50,47 @@ rule all:
         expand("data/{hybrid_genome_id}/sequence/{hybrid_genome_id}.{ext}", hybrid_genome_id=hybrid_genomes.id, ext=["fa.fai","dict"]),
         expand("data/{hybrid_genome_id}/indexes/star/SA", hybrid_genome_id=hybrid_genomes.id),
         expand("data/{hybrid_genome_id}/indexes/bowtie2/{hybrid_genome_id}.1.bt2", hybrid_genome_id=hybrid_genomes.id),
+    output:
+        flag=touch("{timestamp_dir}{{timestr}}/rsync.done".format(timestamp_dir=timestamp_dir)),
+        outdir=directory("{timestamp_dir}{{timestr}}".format(timestamp_dir=timestamp_dir))
+    log:
+        stdout="logs/timestamp_backup/{timestr}.o",
+        stderr="logs/timestamp_backup/{timestr}.e",
+
+    benchmark:
+        "benchmarks/timestamp_backup/{timestr}.txt"
+    params:
+        latest_link=lambda wildcards: "{timestamp_dir}/latest".format(timestamp_dir=timestamp_dir),
+        sourceDir="/secondary/projects/bbc/research/prep_bbc_shared",
+        backupPath=lambda wildcards: "{timestamp_dir}{timestr}".format(timestamp_dir=timestamp_dir, timestr=wildcards.timestr)
+    threads:1
+    resources:
+        mem_gb=64
+    envmodules:
+    shell:
+        """
+        mkdir -p "{output.outdir}"
+
+        rsync -av \
+          --link-dest "{params.latest_link}" \
+          --exclude '.git/' \
+          --exclude 'temp/' \
+          --exclude '.gitignore' \
+          --include 'bin/**' \
+          --include 'data/**' \
+          --include 'logs/**' \
+          --include 'schemas/**' \
+          --include 'benchmarks/**' \
+          --include 'Snakefile' \
+          --include '*/' \
+          --exclude '*' \
+          "{params.sourceDir}" \
+          "{params.backupPath}"
+        
+        rm -f "{params.latest_link}"
+        ln -s "{params.backupPath}" "{params.latest_link}" 
+        """
+
 
 # need this because both rules produce the same output (in Snakemake terminology, ambiguous rules)
 ruleorder: cat_hybrid_seq > download_genome_fasta
