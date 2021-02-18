@@ -62,7 +62,7 @@ rule timestamp_backup:
     params:
         latest_link=lambda wildcards: "{timestamp_dir}/latest".format(timestamp_dir=timestamp_dir),
         sourceDir="/secondary/projects/bbc/research/prep_bbc_shared",
-        backupPath=lambda wildcards: "{timestamp_dir}{timestr}".format(timestamp_dir=timestamp_dir, timestr=wildcards.timestr)
+        #backupPath=lambda wildcards: "{timestamp_dir}{timestr}".format(timestamp_dir=timestamp_dir, timestr=wildcards.timestr)
     threads:1
     resources:
         mem_gb=64
@@ -71,7 +71,8 @@ rule timestamp_backup:
         """
         mkdir -p "{output.outdir}"
 
-        rsync -av \
+        rsync -rlDv \
+          --checksum \
           --link-dest "{params.latest_link}" \
           --exclude '.git/' \
           --exclude 'temp/' \
@@ -85,10 +86,10 @@ rule timestamp_backup:
           --include '*/' \
           --exclude '*' \
           "{params.sourceDir}" \
-          "{params.backupPath}"
+          "{output.outdir}"
         
         rm -f "{params.latest_link}"
-        ln -s "{params.backupPath}" "{params.latest_link}" 
+        ln -s "{output.outdir}" "{params.latest_link}" 
         """
 
 
