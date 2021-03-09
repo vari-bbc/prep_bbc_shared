@@ -32,8 +32,9 @@ snakemake --rulegraph | dot -Tpng > logs/rulegraph.png
 # run snakemake
 snakemake \
 -p \
+--latency-wait 20 \
 --use-envmodules \
---jobs 100 \
+--jobs 30 \
 --cluster "ssh ${PBS_O_LOGNAME}@submit 'module load ${snakemake_module}; cd ${PBS_O_WORKDIR}; qsub \
 -V \
 -q bbc \
