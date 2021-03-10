@@ -13,9 +13,11 @@ Table of Contents
 
 # How to run
 
-Add new rows to the 'hybrid_genomes.tsv', 'species.tsv' and/or 'spikeins.tsv' as needed, then run:
+1. Add new rows to the 'hybrid_genomes.tsv', 'species.tsv' and/or 'spikeins.tsv' as needed. 
 
-```qsub -q bbc bin/run_snakemake.sh```
+2. Run `snakemake -npr` and look over all the jobs that will be run. Typically, only jobs related to the new information entered in step 1 need to be run. To rerun specific species or hybrid genomes (for example if making the index with a new aligner version), you will need to delete the corresponding directories in `data/`.
+
+3. To run the above jobs, type `qsub -q bbc bin/run_snakemake.sh`.
 
 # Incremental backups after each run
 
