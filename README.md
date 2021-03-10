@@ -6,40 +6,22 @@ Table of Contents
 =================
 
    * [How to run](#how-to-run)
-   * [Directory structure](#directory-structure)
+   * [Incremental backups after each run](#incremental-backups-after-each-run)
    * [The 'species' file](#the-species-file)
    * [The workflow](#the-workflow)
    * [Hybrid genomes and spike-in references](#hybrid-genomes-and-spike-in-references)
 
 # How to run
-`qsub -q bbc bin/run_snakemake.sh`
 
-# Directory structure
-The file structure is:
+Add new rows to the 'hybrid_genomes.tsv', 'species.tsv' and/or 'spikeins.tsv' as needed, then run:
 
-* Date of creation
-    * hg38_gencode
-        * sequence
-            * sequence.fa
-            * sequence.fa.fai
-            * sequence.dict
-        * annotation
-            * genes.gtf
-        * indexes
-            * star/
-            * bwa/
-            * bowtie2/
-    * mm10_gencode
-        * sequence
-            * sequence.fa
-            * sequence.fa.fai
-            * sequence.dict
-        * annotation
-            * genes.gtf
-        * indexes
-            * star/
-            * bwa/
-            * bowtie2/
+```qsub -q bbc bin/run_snakemake.sh```
+
+# Incremental backups after each run
+
+In order to allow specific index or resource files to be permanently accessible, after every run, this workflow creates a timestamped copy of the entire workflow directory at `/secondary/projects/bbc/research/prep_bbc_shared_timestamped/<timestamp>`. This backup mechanism is specified by the 'timestamp_backup' rule.
+
+To save space, an incremental backup strategy is used. Inside the `prep_bbc_shared_timestamped/` directory is a symlink called 'latest' that always points to the latest timestamped directory. During each backup, `rsync` is used to compare the checksums of the files in 'latest' and the newly generated files. If the files are unchanged, hard links to the 'latest' directory are created in the new backup. Otherwise, files will be copied for the new backup. After `rsync` is run to completion, the 'latest' symlink is updated to the new time-stamped directory.
 
 # The 'species' file
 
