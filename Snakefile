@@ -10,7 +10,7 @@ min_version("5.28.0")
 
 ##### load config and sample sheets #####
 
-#configfile: "bin/config.yaml"
+configfile: "bin/config.yaml"
 #validate(config, schema="schemas/config.schema.yaml")
 
 species = pd.read_table("bin/species.tsv", dtype=str).set_index(["id"], drop=False)
@@ -27,7 +27,7 @@ validate(hybrid_genomes, "schemas/hybrid_genomes.schema.yaml")
 
 
 timestr = time.strftime("%Y%m%d-%H.%M.%S")
-timestamp_dir = "/secondary/projects/bbc/research/prep_bbc_shared_timestamped/"
+timestamp_dir = config["timestamp_dir"]
 rule all:
     input:
        "{timestamp_dir}{timestr}/rsync.done".format(timestamp_dir=timestamp_dir, timestr=timestr)
@@ -61,7 +61,7 @@ rule timestamp_backup:
         "benchmarks/timestamp_backup/{timestr}.txt"
     params:
         latest_link=lambda wildcards: "{timestamp_dir}/latest".format(timestamp_dir=timestamp_dir),
-        sourceDir="/secondary/projects/bbc/research/prep_bbc_shared_current",
+        sourceDir=config["sourceDir"],
         #backupPath=lambda wildcards: "{timestamp_dir}{timestr}".format(timestamp_dir=timestamp_dir, timestr=wildcards.timestr)
     threads:1
     resources:
@@ -136,8 +136,8 @@ rule fai_and_dict:
     resources:
         mem_gb=30
     envmodules:
-        "bbc/samtools/samtools-1.9",
-        "bbc/picard/picard-2.21.4-SNAPSHOT"
+        config["samtools"],
+        config["picard"]
     shell:
         """
         samtools faidx {input.genome_fa} 
@@ -272,7 +272,7 @@ rule star_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/STAR/STAR-2.7.8a"
+        config["STAR"]
     shell:
         """
         STAR --runMode genomeGenerate \
@@ -304,7 +304,7 @@ rule bwa_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/bwa/bwa-0.7.17"
+        config["bwa"]
     shell:
         """
         #ln -s "$(pwd)/{input.genome_fa}" {params.outpref}
@@ -332,8 +332,8 @@ rule bowtie2_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/bowtie2/bowtie2-2.4.1",
-        "bbc/python3/python-3.8.1"
+        config["bowtie2"],
+        config["python3"]
     shell:
         """
         bowtie2-build --threads {threads} {input.genome_fa} {params.outpref} 
@@ -360,7 +360,7 @@ rule bismark_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/bismark/bismark-0.23.0"
+        config["bismark"]
     shell:
         """
         ln -rs {input.genome_fa} {output[0]}
@@ -422,7 +422,7 @@ rule kb_lamanno:
     benchmark:
         "benchmarks/kb_lamanno/{species_id}.txt"
     envmodules:
-        "bbc/kb-python/kb-python-0.24.4"
+        config["kb-python"]
     resources:
         mem_gb=160
     shadow: "shallow"
@@ -462,8 +462,8 @@ rule download_gatk_resource_bundle:
     resources:
         mem_gb=64
     envmodules:
-        "bbc/parallel/parallel-20191122",
-        "bbc/gsutil/gsutil-4.52"
+        config["parallel"],
+        config["gsutil"]
     shell:
         """
         # download all files from the directory. Ignore sub-directories.
