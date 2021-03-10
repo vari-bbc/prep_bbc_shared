@@ -74,18 +74,7 @@ rule timestamp_backup:
         rsync -rlDv \
           --checksum \
           --link-dest "{params.latest_link}" \
-          --exclude '.git/' \
-          --exclude 'temp/' \
-          --exclude '.gitignore' \
-          --include 'bin/**' \
-          --include 'data/**' \
-          --include 'logs/**' \
-          --include 'schemas/**' \
-          --include 'benchmarks/**' \
-          --include 'Snakefile' \
-          --include '*/' \
-          --exclude '*' \
-          "{params.sourceDir}" \
+          "{params.sourceDir}/" \
           "{output.outdir}"
         
         rm -f "{params.latest_link}"
@@ -134,7 +123,7 @@ rule fai_and_dict:
     output:
         fai="data/{species_id}/sequence/{species_id}.fa.fai",
         dict="data/{species_id}/sequence/{species_id}.dict",
-        temp=directory("temp/"),
+        temp=temp(directory("data/{species_id}/temp/")),
         
     log:
         stdout="logs/fai_and_dict/{species_id}.o",
