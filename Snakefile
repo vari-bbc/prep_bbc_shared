@@ -133,7 +133,8 @@ rule fai_and_dict:
         genome_fa="data/{species_id}/sequence/{species_id}.fa", 
     output:
         fai="data/{species_id}/sequence/{species_id}.fa.fai",
-        dict="data/{species_id}/sequence/{species_id}.dict"
+        dict="data/{species_id}/sequence/{species_id}.dict",
+        temp=directory("temp/"),
         
     log:
         stdout="logs/fai_and_dict/{species_id}.o",
@@ -142,7 +143,6 @@ rule fai_and_dict:
     benchmark:
         "benchmarks/fai_and_dict/{species_id}.txt"
     params:
-        temp="temp/"
     threads:1
     resources:
         mem_gb=30
@@ -156,7 +156,7 @@ rule fai_and_dict:
         java \
         -Xms8g \
         -Xmx{resources.mem_gb}g \
-        -Djava.io.tmpdir={params.temp} \
+        -Djava.io.tmpdir={output.temp} \
         -jar $PICARD \
         CreateSequenceDictionary \
         REFERENCE={input.genome_fa} \
