@@ -42,7 +42,7 @@ rule timestamp_backup:
         expand("data/{species.id}/indexes/star/SA", species=species.itertuples()),
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
-        expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
+        #expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
         expand("data/{species.id}/indexes/bismark/{species.id}.fa", species=species.itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
@@ -61,7 +61,7 @@ rule timestamp_backup:
         "benchmarks/timestamp_backup/{timestr}.txt"
     params:
         latest_link=lambda wildcards: "{timestamp_dir}/latest".format(timestamp_dir=timestamp_dir),
-        sourceDir="/secondary/projects/bbc/research/prep_bbc_shared",
+        sourceDir="/secondary/projects/bbc/research/prep_bbc_shared_current",
         #backupPath=lambda wildcards: "{timestamp_dir}{timestr}".format(timestamp_dir=timestamp_dir, timestr=wildcards.timestr)
     threads:1
     resources:
@@ -283,7 +283,7 @@ rule star_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/STAR/STAR-2.7.3a"
+        "bbc/STAR/STAR-2.7.8a"
     shell:
         """
         STAR --runMode genomeGenerate \
