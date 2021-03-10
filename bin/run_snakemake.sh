@@ -12,10 +12,10 @@ snakemake_module="bbc/snakemake/snakemake-5.28.0"
 module load $snakemake_module
 
 # make temp directory for tools that need it
-if [ ! -d "./temp/" ]
-then
-    mkdir ./temp/
-fi
+#if [ ! -d "./temp/" ]
+#then
+#    mkdir ./temp/
+#fi
 
 
 # save DAG job file with time stamp
