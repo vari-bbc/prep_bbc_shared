@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import re
+import time
 from snakemake.utils import validate, min_version
 ##### set minimum snakemake version #####
 min_version("5.28.0")
@@ -9,7 +10,7 @@ min_version("5.28.0")
 
 ##### load config and sample sheets #####
 
-#configfile: "bin/config.yaml"
+configfile: "bin/config.yaml"
 #validate(config, schema="schemas/config.schema.yaml")
 
 species = pd.read_table("bin/species.tsv", dtype=str).set_index(["id"], drop=False)
@@ -24,7 +25,14 @@ validate(spikeins, "schemas/spikeins.schema.yaml")
 hybrid_genomes = pd.read_table("bin/hybrid_genomes.tsv", dtype=str)
 validate(hybrid_genomes, "schemas/hybrid_genomes.schema.yaml")
 
+
+timestr = time.strftime("%Y%m%d-%H.%M.%S")
+timestamp_dir = config["timestamp_dir"]
 rule all:
+    input:
+       "{timestamp_dir}{timestr}/rsync.done".format(timestamp_dir=timestamp_dir, timestr=timestr)
+
+rule timestamp_backup:
     input:
         #expand("data/{species.id}/sequence/{species.id}.fa", species=species.itertuples()),
         expand("data/{species_id}/annotation/{species_id}.basic.gtf", species_id=species[species.gene_basic_gtf.notnull()]['id'].values),
@@ -34,7 +42,7 @@ rule all:
         expand("data/{species.id}/indexes/star/SA", species=species.itertuples()),
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
-        expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
+        #expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
         expand("data/{species.id}/indexes/bismark/{species.id}.fa", species=species.itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
@@ -42,6 +50,37 @@ rule all:
         expand("data/{hybrid_genome_id}/sequence/{hybrid_genome_id}.{ext}", hybrid_genome_id=hybrid_genomes.id, ext=["fa.fai","dict"]),
         expand("data/{hybrid_genome_id}/indexes/star/SA", hybrid_genome_id=hybrid_genomes.id),
         expand("data/{hybrid_genome_id}/indexes/bowtie2/{hybrid_genome_id}.1.bt2", hybrid_genome_id=hybrid_genomes.id),
+    output:
+        flag=touch("{timestamp_dir}{{timestr}}/rsync.done".format(timestamp_dir=timestamp_dir)),
+        outdir=directory("{timestamp_dir}{{timestr}}".format(timestamp_dir=timestamp_dir))
+    log:
+        stdout="logs/timestamp_backup/{timestr}.o",
+        stderr="logs/timestamp_backup/{timestr}.e",
+
+    benchmark:
+        "benchmarks/timestamp_backup/{timestr}.txt"
+    params:
+        latest_link=lambda wildcards: "{timestamp_dir}/latest".format(timestamp_dir=timestamp_dir),
+        sourceDir=config["sourceDir"],
+        #backupPath=lambda wildcards: "{timestamp_dir}{timestr}".format(timestamp_dir=timestamp_dir, timestr=wildcards.timestr)
+    threads:1
+    resources:
+        mem_gb=64
+    envmodules:
+    shell:
+        """
+        mkdir -p "{output.outdir}"
+
+        rsync -rlDv \
+          --checksum \
+          --link-dest "{params.latest_link}" \
+          "{params.sourceDir}/" \
+          "{output.outdir}"
+        
+        rm -f "{params.latest_link}"
+        ln -s "{output.outdir}" "{params.latest_link}" 
+        """
+
 
 # need this because both rules produce the same output (in Snakemake terminology, ambiguous rules)
 ruleorder: cat_hybrid_seq > download_genome_fasta
@@ -83,7 +122,8 @@ rule fai_and_dict:
         genome_fa="data/{species_id}/sequence/{species_id}.fa", 
     output:
         fai="data/{species_id}/sequence/{species_id}.fa.fai",
-        dict="data/{species_id}/sequence/{species_id}.dict"
+        dict="data/{species_id}/sequence/{species_id}.dict",
+        temp=temp(directory("data/{species_id}/temp/")),
         
     log:
         stdout="logs/fai_and_dict/{species_id}.o",
@@ -92,13 +132,12 @@ rule fai_and_dict:
     benchmark:
         "benchmarks/fai_and_dict/{species_id}.txt"
     params:
-        temp="temp/"
     threads:1
     resources:
         mem_gb=30
     envmodules:
-        "bbc/samtools/samtools-1.9",
-        "bbc/picard/picard-2.21.4-SNAPSHOT"
+        config["samtools"],
+        config["picard"]
     shell:
         """
         samtools faidx {input.genome_fa} 
@@ -106,7 +145,7 @@ rule fai_and_dict:
         java \
         -Xms8g \
         -Xmx{resources.mem_gb}g \
-        -Djava.io.tmpdir={params.temp} \
+        -Djava.io.tmpdir={output.temp} \
         -jar $PICARD \
         CreateSequenceDictionary \
         REFERENCE={input.genome_fa} \
@@ -233,7 +272,7 @@ rule star_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/STAR/STAR-2.7.3a"
+        config["STAR"]
     shell:
         """
         STAR --runMode genomeGenerate \
@@ -265,7 +304,7 @@ rule bwa_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/bwa/bwa-0.7.17"
+        config["bwa"]
     shell:
         """
         #ln -s "$(pwd)/{input.genome_fa}" {params.outpref}
@@ -293,8 +332,8 @@ rule bowtie2_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/bowtie2/bowtie2-2.4.1",
-        "bbc/python3/python-3.8.1"
+        config["bowtie2"],
+        config["python3"]
     shell:
         """
         bowtie2-build --threads {threads} {input.genome_fa} {params.outpref} 
@@ -321,7 +360,7 @@ rule bismark_idx:
     resources:
         mem_gb=100
     envmodules:
-        "bbc/bismark/bismark-0.23.0"
+        config["bismark"]
     shell:
         """
         ln -rs {input.genome_fa} {output[0]}
@@ -383,7 +422,7 @@ rule kb_lamanno:
     benchmark:
         "benchmarks/kb_lamanno/{species_id}.txt"
     envmodules:
-        "bbc/kb-python/kb-python-0.24.4"
+        config["kb-python"]
     resources:
         mem_gb=160
     shadow: "shallow"
@@ -423,8 +462,8 @@ rule download_gatk_resource_bundle:
     resources:
         mem_gb=64
     envmodules:
-        "bbc/parallel/parallel-20191122",
-        "bbc/gsutil/gsutil-4.52"
+        config["parallel"],
+        config["gsutil"]
     shell:
         """
         # download all files from the directory. Ignore sub-directories.
