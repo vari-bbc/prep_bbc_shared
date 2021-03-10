@@ -13,11 +13,17 @@ Table of Contents
 
 # How to run
 
-1. Add new rows to the 'hybrid_genomes.tsv', 'species.tsv' and/or 'spikeins.tsv' as needed. 
+1. For BBC members, don't clone this repo, just work from the previously cloned directory.
 
-2. Run `snakemake -npr` and look over all the jobs that will be run. Typically, only jobs related to the new information entered in step 1 need to be run. To rerun specific species or hybrid genomes (for example if making the index with a new aligner version), you will need to delete the corresponding directories in `data/`.
+```cd /secondary/projects/bbc/research/prep_bbc_shared_current```
 
-3. To run the above jobs, type `qsub -q bbc bin/run_snakemake.sh`.
+Note: Previously, we had index files in `/secondary/projects/bbc/research/prep_bbc_shared`. That directory is now deprecated.
+
+2. Add new rows to the 'hybrid_genomes.tsv', 'species.tsv' and/or 'spikeins.tsv' as needed. 
+
+3. Run `snakemake -npr` and look over all the jobs that will be run. Typically, only jobs related to the new information entered in step 1 need to be run. To rerun specific species or hybrid genomes (for example if making the index with a new aligner version), you will need to delete the corresponding directories in `data/`.
+
+4. To run the above jobs, type `qsub -q bbc bin/run_snakemake.sh`.
 
 # Incremental backups after each run
 
