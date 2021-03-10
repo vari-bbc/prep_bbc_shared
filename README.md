@@ -15,9 +15,9 @@ Table of Contents
 
 1. For BBC members, don't clone this repo, just work from the previously cloned directory.
 
-```cd /secondary/projects/bbc/research/prep_bbc_shared_current```
+   ```cd /secondary/projects/bbc/research/prep_bbc_shared_current```
 
-Note: Previously, we had index files in `/secondary/projects/bbc/research/prep_bbc_shared`. That directory is now deprecated.
+   Note: Previously, we had index files in `/secondary/projects/bbc/research/prep_bbc_shared`. That directory is now deprecated.
 
 2. Add new rows to the 'hybrid_genomes.tsv', 'species.tsv' and/or 'spikeins.tsv' as needed. 
 
