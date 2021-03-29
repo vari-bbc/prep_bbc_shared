@@ -398,11 +398,16 @@ rule download_blacklist:
             mv {output} {output}.gz
             gunzip {output}.gz 
         fi
+
+        # Store the chromosome names in the fai file in a variable
+        export fai_chroms=$(cut -f1 {input.genome_fai} | perl -lne 'push(@out_line, $_); END{{print join("\t", @out_line); print "\n"}}')
+       
+        # Go through the blacklist line by line. If a blacklist chrom name is not among the chrom names from the fai file, either add 'chr' prefix or take it away.
+        perl -i -F"\\t" -lanpe  'BEGIN{{$fai_chroms=$ENV{{"fai_chroms"}}}} if($fai_chroms !~ /\\b$F[0]\\b/){{ if (/^chr/) {{s/^chr//;}} else {{$_="chr".$_; }}}}' {output}
+        
+        # Check that every chrom name in the blacklist is in the fai file
+        perl -F"\\t" -ane  'BEGIN{{$fai_chroms=$ENV{{"fai_chroms"}}}} die "$F[0] not in .fai file" unless ($fai_chroms =~ /\\b$F[0]\\b/)' {output}
            
-        # make sure chromosome names are compatible between genome fasta and blacklist
-        paste <(cut -f1 {input.genome_fai} | grep -Pi "^(chr)?[0-9XY]{{1,2}}" | sort) <(cut -f1 {output} | grep -Pi "^(chr)?[0-9XY]{{1,2}}" | sort | uniq) > {params.temp_chroms} 
-        perl -lane 'die "Chromosomes in genome fasta and blacklist do not match. See chroms.temp in blacklist directory." unless $F[0] eq $F[1]' {params.temp_chroms} 
-        rm {params.temp_chroms}
         """
 
 rule kb_lamanno:
