@@ -72,6 +72,7 @@ rule timestamp_backup:
         mkdir -p "{output.outdir}"
 
         rsync -rlDv \
+          -H \
           --checksum \
           --link-dest "{params.latest_link}" \
           "{params.sourceDir}/" \
