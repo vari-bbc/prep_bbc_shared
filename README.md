@@ -19,7 +19,7 @@ Table of Contents
 
    Note: Previously, we had index files in `/secondary/projects/bbc/research/prep_bbc_shared`. That directory is now deprecated.
 
-2. Add new rows to the 'hybrid_genomes.tsv', 'species.tsv' and/or 'spikeins.tsv' as needed. 
+2. Add new rows to the 'species.tsv', 'hybrid_genomes.tsv', and/or 'spikeins.tsv' as needed. If you simply want to compute the index files for a new species, you only need to add a row with the relevant information to 'species.tsv'. For more information about the other two files, see [Hybrid genomes and spike-in references](#hybrid-genomes-and-spike-in-references).
 
 3. Run `snakemake -npr` and look over all the jobs that will be run. Typically, only jobs related to the new information entered in step 1 need to be run. To rerun specific species or hybrid genomes (for example if making the index with a new aligner version), you will need to delete the corresponding directories in `data/`.
 
