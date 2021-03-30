@@ -39,6 +39,14 @@ properties:
   blacklist_id:
     type: string
     description: id for renaming blacklist after downloading
+  
+  gatk_resource_bundle:
+    type: string
+    description: GATK resource bundle
+ 
+  gene_basic_gtf:
+    type: string
+    description: basic gene annotation from GENCODE
 
 required:
   - species
