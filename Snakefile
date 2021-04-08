@@ -5,7 +5,7 @@ import re
 import time
 from snakemake.utils import validate, min_version
 ##### set minimum snakemake version #####
-min_version("5.28.0")
+min_version("6.1.0")
 
 
 ##### load config and sample sheets #####
