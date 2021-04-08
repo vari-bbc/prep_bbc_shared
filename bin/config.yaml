@@ -2,7 +2,7 @@
 sourceDir: "/secondary/projects/bbc/research/prep_bbc_shared_current"
 
 # This is where the timestamped directories and the 'latest' symlink will be created.
-timestamp_dir: "/secondary/projects/bbc/research/prep_bbc_shared_timestamped/"
+timestamp_dir: "/varidata/research/projects/bbc/versioned_references/"
 
 # Environment modules used.
 # Specify all environment modules here instead of within the Snakefile itself to make it easy to look over quickly.
