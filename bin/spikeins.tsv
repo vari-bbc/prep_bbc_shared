@@ -1,3 +1,5 @@
 spikein_id	spikein_fasta	spikein_gtf
 lambda	lambda.fa	
 ERCC92	ERCC92.fa	ERCC92.gtf
+cfmedips	cfmedips.fa	
+viruses	merged_viruses.fa	
