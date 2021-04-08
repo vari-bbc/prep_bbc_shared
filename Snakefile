@@ -583,9 +583,10 @@ rule cat_hybrid_seq:
     resources:
         mem_gb=1
     envmodules:
+        config["seqtk"]
     shell:
         """
-        cat {input} > {output}
+        cat {input} | seqtk seq -l 60 > {output}
         """
 
 
