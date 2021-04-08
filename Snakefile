@@ -26,7 +26,7 @@ hybrid_genomes = pd.read_table("bin/hybrid_genomes.tsv", dtype=str)
 validate(hybrid_genomes, "schemas/hybrid_genomes.schema.yaml")
 
 
-timestr = time.strftime("%Y%m%d-%H.%M.%S")
+timestr = time.strftime("%Y-%m-%d_%H.%M.%S")
 timestamp_dir = config["timestamp_dir"]
 rule all:
     input:
