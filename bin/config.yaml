@@ -1,5 +1,5 @@
 # This is the directory that the rsync rule will use as the source directory. It shuold be the run directory this workflow.
-sourceDir: "/secondary/projects/bbc/research/prep_bbc_shared_current"
+sourceDir: "/varidata/research/projects/bbc/research/prep_bbc_shared_current"
 
 # This is where the timestamped directories and the 'latest' symlink will be created.
 timestamp_dir: "/varidata/research/projects/bbc/versioned_references/"
