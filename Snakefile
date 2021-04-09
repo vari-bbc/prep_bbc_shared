@@ -25,12 +25,15 @@ validate(spikeins, "schemas/spikeins.schema.yaml")
 hybrid_genomes = pd.read_table("bin/hybrid_genomes.tsv", dtype=str)
 validate(hybrid_genomes, "schemas/hybrid_genomes.schema.yaml")
 
-
 timestr = time.strftime("%Y-%m-%d_%H.%M.%S")
 timestamp_dir = config["timestamp_dir"]
+latest_symlink = timestamp_dir + 'latest'
+
+# If there is a latest run (previous runs already present in the target directory) then add one to version number.
+ref_version = int(re.findall(r'(?<=v)\d+$', os.readlink(latest_symlink))[0]) + 1 if os.path.exists(latest_symlink) else '1'
 rule all:
     input:
-       "{timestamp_dir}{timestr}/rsync.done".format(timestamp_dir=timestamp_dir, timestr=timestr)
+       "{timestamp_dir}{timestr}_v{version}/rsync.done".format(timestamp_dir=timestamp_dir, timestr=timestr, version = ref_version)
 
 rule timestamp_backup:
     input:
