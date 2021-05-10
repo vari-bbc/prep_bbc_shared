@@ -70,16 +70,19 @@ rule timestamp_backup:
     resources:
         mem_gb=64
     envmodules:
+        config["python3"]
     shell:
         """
         mkdir -p "{output.outdir}"
 
-        rsync -rlDv \
-          -H \
-          --checksum \
-          --link-dest "{params.latest_link}" \
-          "{params.sourceDir}/" \
-          "{output.outdir}"
+        python3 ./bin/python_scripts/main.py  -b "{params.latest_link}"  -s "{params.sourceDir}"  -d "{output.outdir}" 2>python.out
+
+#        rsync -rlDv \
+#          -H \
+#          --checksum \
+#          --link-dest "{params.latest_link}" \
+#          "{params.sourceDir}/" \
+#          "{output.outdir}"
         
         rm -f "{params.latest_link}"
         ln -s "{output.outdir}" "{params.latest_link}" 
