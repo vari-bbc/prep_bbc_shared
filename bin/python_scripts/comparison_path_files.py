@@ -71,8 +71,8 @@ class ComparisonPathOfFiles(object):
     def compare_files(self):
 
         '''
-        This function is for only files to compare. Not symlinks.
-        :return:
+        This function is for comparing only files. Not symlinks. setter function
+        :return: None
         '''
         hardlinks_path_from_previous_dir_list = list()
         copy_files_path_from_source_dir_list = list()
@@ -122,6 +122,12 @@ class ComparisonPathOfFiles(object):
         return None
 
     def calculate_md5sum(self, a_file):
+        '''
+
+        calculating md5sum
+        :param a_file: an abs path of file
+        :return: md5sum value
+        '''
         with open(a_file, 'rb')as fin:
             file_hash = hashlib.md5()
             chunk = fin.read(8192)
@@ -131,6 +137,10 @@ class ComparisonPathOfFiles(object):
         return file_hash.hexdigest()
 
     def compare_symlinks(self):
+        '''
+        This function is for comparing symlinks. Not hard links (unable to identify hard links in Python) - setter function
+        :return: None
+        '''
 
         ## calling for only a key which is abs_symlinks
         relative_path_backup_files = [i.replace(self.backup_dir_prefix_path) for i in

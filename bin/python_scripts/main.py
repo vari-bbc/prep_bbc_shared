@@ -9,7 +9,7 @@ logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:
                     datefmt='%Y-%m-%d:%H:%M:%S',
                     level=logging.DEBUG)
 
-# this is for turning off the logging
+# turning off the logging function
 logging.getLogger().disabled = False
 
 

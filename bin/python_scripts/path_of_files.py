@@ -52,7 +52,7 @@ class PathOfFiles(object):
 
     def validate_files_path(self):
         '''
-        validate files in lists
+        validate a path of directory
         :return: None or Error raised.
         '''
 

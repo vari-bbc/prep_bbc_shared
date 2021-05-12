@@ -42,6 +42,10 @@ class CopyFilesHardlinks(object):
         return self._source_dir_prefix_path
 
     def hard_links_unchanged_files(self):
+        '''
+        create hard links to unchanged files in the destination directory.
+        :return: None
+        '''
         # hard_links_list = abs_path_of_files_from_previous_dir
         for backup_dir_files in self._hard_links_list:
 
@@ -63,6 +67,10 @@ class CopyFilesHardlinks(object):
         logging.info("---creating hard links is done.---")
 
     def copy_changed_files(self):
+        '''
+        copy changed files from the source directory into the destination directory.
+        :return: None
+        '''
 
         for source_dir_files in self._copy_files_path_from_source_dir_list:
             relative_path_dest_file = source_dir_files.replace(self.source_dir_prefix_path, "")
@@ -75,6 +83,10 @@ class CopyFilesHardlinks(object):
             shutil.copy2(source_dir_files, abs_path_dest_file)
 
     def create_symlinks(self):
+        '''
+        create symlinks in the destination directory
+        :return: None
+        '''
         for abs_src_symlinks in self._symlinks_dict_from_source_dir:
             # This is a relative symlinks (file) path
             src_symlinks = abs_src_symlinks.replace(self.source_dir_prefix_path, "")
