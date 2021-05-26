@@ -75,7 +75,7 @@ rule timestamp_backup:
         """
         mkdir -p "{output.outdir}"
 
-        python3 ./bin/python_scripts/main.py  -b "{params.latest_link}"  -s "{params.sourceDir}"  -d "{output.outdir}" 2>python.out
+        python3 ./bin/python_scripts/main.py  -b "{params.latest_link}"  -s "{params.sourceDir}"  -d "{output.outdir}" 2>logs/python_script.log
 
 #        rsync -rlDv \
 #          -H \
