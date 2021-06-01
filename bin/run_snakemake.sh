@@ -44,4 +44,4 @@ snakemake \
 -W umask=002 \
 -o {log.stdout} \
 -e {log.stderr}'
---conda-fronted conda"
+--conda-frontend conda"
