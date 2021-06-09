@@ -43,5 +43,5 @@ snakemake \
 -l walltime=100:00:00 \
 -W umask=002 \
 -o {log.stdout} \
--e {log.stderr}'
---conda-frontend conda"
+-e {log.stderr}'" \
+--conda-frontend conda
