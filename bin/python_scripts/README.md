@@ -15,5 +15,5 @@ These are python scripts for doing what the ```rsync link-dest``` does, but the 
 ## To Do list
 
 * [ ] Create a dry run function if possible
-* [x] Refactoring for a name of variables and functions
+* [x] Refactor for a name of variables and functions
 * [x] Integrate these files into a snakemake pipeline 
