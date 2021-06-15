@@ -404,7 +404,7 @@ rule salmon_idx:
     input:
         tx_fa="data/{species_id}/annotation/{species_id}.transcripts.fasta"
     output:
-        "data/{species_id}/indexes/salmon/{species_id}"
+        directory("data/{species_id}/indexes/salmon/{species_id}")
     log:
         stdout="logs/salmon_idx/{species_id}.o",
         stderr="logs/salmon_idx/{species_id}.e",
