@@ -47,7 +47,8 @@ rule timestamp_backup:
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
         #expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
         expand("data/{species.id}/indexes/bismark/{species.id}.fa", species=species.itertuples()),
-        expand("data/{species.id}/indexes/kallisto/{species.id}.fa", species=species.itertuples()),
+        expand("data/{species.id}/indexes/kallisto/{species.id}", species=species.itertuples()),
+        expand("data/{species.id}/indexes/salmon/{species.id}", species=species.itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
         expand("data/{hybrid_genome_id}/indexes/bwa/{hybrid_genome_id}.bwt", hybrid_genome_id=hybrid_genomes.id),
@@ -379,16 +380,16 @@ rule bismark_idx:
 
 rule kallisto_idx:
     input:
-        tx_fa="data/{species_id}/sequence/{species_id}.transcripts.fasta"
+        tx_fa="data/{species_id}/annotation/{species_id}.transcripts.fasta"
     output:
-        "data/{species_id}/indexes/kallisto/{species_id}.idx"
+        "data/{species_id}/indexes/kallisto/{species_id}"
     log:
         stdout="logs/kallisto_idx/{species_id}.o",
         stderr="logs/kallisto_idx/{species_id}.e",
     benchmark:
         "benchmarks/kallisto_idx/{species_id}.txt",
     params:
-        outpref="data/{species_id}/indexes/kallisto/{species_id}.idx",
+        out_idx="data/{species_id}/indexes/kallisto/{species_id}",
     threads: 4,
     resources:
         mem_gb=50,
@@ -396,11 +397,30 @@ rule kallisto_idx:
         config["kallisto"],
     shell:
         """
-        kallisto index -i {params.outpref} {input.tx_fa}
+        kallisto index -i {params.out_idx} {input.tx_fa}
         """
 
-# rule salmon_idx:
-#     pass
+rule salmon_idx:
+    input:
+        tx_fa="data/{species_id}/annotation/{species_id}.transcripts.fasta"
+    output:
+        "data/{species_id}/indexes/salmon/{species_id}"
+    log:
+        stdout="logs/salmon_idx/{species_id}.o",
+        stderr="logs/salmon_idx/{species_id}.e",
+    benchmark:
+        "benchmarks/salmon_idx/{species_id}.txt",
+    params:
+        out_idx="data/{species_id}/indexes/salmon/{species_id}",
+    threads: 4,
+    resources:
+        mem_gb=50,
+    envmodules:
+        config["salmon"],
+    shell:
+        """
+        kallisto index -t {input.tx_fa} -i {params.out_idx}
+        """
 
 # We need the genome fai as input because we check that the chromosome names are compatible between the blacklist and the genome
 rule download_blacklist:
