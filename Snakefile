@@ -400,9 +400,29 @@ rule kallisto_idx:
         kallisto index -i {params.out_idx} {input.tx_fa}
         """
 
+rule build_salmon_tx_fa:
+    input:
+        genome_fa = "data/{species_id}/sequence/{species_id}/fa",
+        tx_fa="data/{species_id}/annotation/{species_id}.transcripts.fasta",
+    output:
+        gentrome_fa ="data/{species_id}/annotation/{species_id}.gentrome.fa",
+    log:
+        stdout="logs/build_salmon_tx_fa/{species_id}.o",
+        stderr="logs/build_salmon_tx_fa/{species_id}.e",
+    benchmark:
+        "benchmarks/build_salmon_tx_fa/{species_id}.txt",
+    params:
+        decoys_txt = "data/{species_id}/annotation/{species_id}.decoys.txt",
+    shell:
+        """
+        grep "^>" <{input.genome_fa} | cut -d " " -f 1 > {params.decoys_txt}
+        sed -i.bak -e "s/>//g" {params.decoys_txt}
+        cat {input.tx_fa} {input.genome_fa} > {output.gentrome_fa}
+        """
+
 rule salmon_idx:
     input:
-        tx_fa="data/{species_id}/annotation/{species_id}.transcripts.fasta"
+        gentrome_fa="data/{species_id}/annotation/{species_id}.gentrome.fa"
     output:
         directory("data/{species_id}/indexes/salmon/{species_id}")
     log:
@@ -412,16 +432,21 @@ rule salmon_idx:
         "benchmarks/salmon_idx/{species_id}.txt",
     params:
         out_idx="data/{species_id}/indexes/salmon/{species_id}",
-    threads: 4,
+        decoys_txt= "data/{species_id}/annotation/{species_id}.decoys.txt",
+    threads: 8,
     resources:
         mem_gb=50,
     envmodules:
         config["salmon"],
-    shell:
-        """
-        salmon index -t {input.tx_fa} -i {params.out_idx}
-        """
-
+    run:
+        if "gencode" in input.gentrome_fa:
+            shell("""
+                salmon index -t {input.gentrome_fa} -i {params.out_idx} --gencode -d {params.decoys_txt} -p {threads}
+                """)
+        else:
+            shell("""
+                salmon index -t {input.gentrome_fa} -i {params.out_idx} -d {params.decoys_txt} -p {threads}
+                """)
 # We need the genome fai as input because we check that the chromosome names are compatible between the blacklist and the genome
 rule download_blacklist:
     input:
