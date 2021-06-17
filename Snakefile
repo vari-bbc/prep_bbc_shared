@@ -46,9 +46,9 @@ rule timestamp_backup:
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
         #expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
-        expand("data/{species.id}/indexes/bismark/{species.id}.fa", species=species.itertuples()),
         expand("data/{species.id}/indexes/kallisto/{species.id}", species=species.itertuples()),
         expand("data/{species.id}/indexes/salmon/{species.id}", species=species.itertuples()),
+        expand("data/{species.id}/annotation/{species.id}.gentrome.fa", species=species.itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
         expand("data/{hybrid_genome_id}/indexes/bwa/{hybrid_genome_id}.bwt", hybrid_genome_id=hybrid_genomes.id),
@@ -400,9 +400,9 @@ rule kallisto_idx:
         kallisto index -i {params.out_idx} {input.tx_fa}
         """
 
-rule build_salmon_tx_fa:
+rule build_salmon_gentrome_fa:
     input:
-        genome_fa = "data/{species_id}/sequence/{species_id}/fa",
+        genome_fa = "data/{species_id}/sequence/{species_id}.fa",
         tx_fa="data/{species_id}/annotation/{species_id}.transcripts.fasta",
     output:
         gentrome_fa ="data/{species_id}/annotation/{species_id}.gentrome.fa",
@@ -420,9 +420,21 @@ rule build_salmon_tx_fa:
         cat {input.tx_fa} {input.genome_fa} > {output.gentrome_fa}
         """
 
-rule salmon_idx:
+## if a transcript.fa from gencode references
+def get_species_from_gencode(wildcards):
+    input_list=list()
+    species_ids_list = species[species.tx_fasta.notnull()]['id'].values
+
+    for i in species_ids_list:
+        if "gencode" in i:
+            result = "data/{species_id}/annotation/{species_id}.gentrome.fa".format(species_id=i)
+            input_list.append(result)
+    return input_list
+
+rule salmon_idx_from_gencode:
     input:
-        gentrome_fa="data/{species_id}/annotation/{species_id}.gentrome.fa"
+        # gentrome_fa="data/{species_id}/annotation/{species_id}.gentrome.fa"
+        get_species_from_gencode,
     output:
         directory("data/{species_id}/indexes/salmon/{species_id}")
     log:
@@ -433,20 +445,20 @@ rule salmon_idx:
     params:
         out_idx="data/{species_id}/indexes/salmon/{species_id}",
         decoys_txt= "data/{species_id}/annotation/{species_id}.decoys.txt",
-    threads: 8,
+    threads: 12,
     resources:
         mem_gb=50,
     envmodules:
         config["salmon"],
-    run:
-        if "gencode" in input.gentrome_fa:
-            shell("""
-                salmon index -t {input.gentrome_fa} -i {params.out_idx} --gencode -d {params.decoys_txt} -p {threads}
-                """)
-        else:
-            shell("""
-                salmon index -t {input.gentrome_fa} -i {params.out_idx} -d {params.decoys_txt} -p {threads}
-                """)
+    shell:
+        """
+        salmon index -t {input} -i {params.out_idx} --gencode -d {params.decoys_txt} -p {threads}
+        """
+
+            # shell("""
+            #     salmon index -t {input.gentrome_fa} -i {params.out_idx} -d {params.decoys_txt} -p {threads}
+            #     """
+
 # We need the genome fai as input because we check that the chromosome names are compatible between the blacklist and the genome
 rule download_blacklist:
     input:
