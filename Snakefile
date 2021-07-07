@@ -413,6 +413,9 @@ rule build_salmon_gentrome_fa:
         "benchmarks/build_salmon_tx_fa/{species_id}.txt",
     params:
         decoys_txt = "data/{species_id}/annotation/{species_id}.decoys.txt",
+    threads: 1,
+    resources:
+        mem_gb=10,
     shell:
         """
         grep "^>" <{input.genome_fa} | cut -d " " -f 1 > {params.decoys_txt}
@@ -420,21 +423,24 @@ rule build_salmon_gentrome_fa:
         cat {input.tx_fa} {input.genome_fa} > {output.gentrome_fa}
         """
 
+# ruleorder: salmon_idx_from_gencode > salmon_idx_from_not_gencode
+
 ## if a transcript.fa from gencode references
-def get_species_from_gencode(wildcards):
-    input_list=list()
-    species_ids_list = species[species.tx_fasta.notnull()]['id'].values
+# def get_species_from_gencode(wildcards):
+#     input_list=list()
+#     species_ids_list = species[species.tx_fasta.notnull()]['id'].values
+#
+#     for i in species_ids_list:
+#         if "gencode" in i:
+#             result = "data/{species_id}/annotation/{species_id}.gentrome.fa".format(species_id=i)
+#             input_list.append(result)
+#     return input_list
 
-    for i in species_ids_list:
-        if "gencode" in i:
-            result = "data/{species_id}/annotation/{species_id}.gentrome.fa".format(species_id=i)
-            input_list.append(result)
-    return input_list
-
-rule salmon_idx_from_gencode:
+# rule salmon_idx_from_gencode:
+rule salmon_idx:
     input:
-        # gentrome_fa="data/{species_id}/annotation/{species_id}.gentrome.fa"
-        get_species_from_gencode,
+        gentrome_fa="data/{species_id}/annotation/{species_id}.gentrome.fa"
+        # get_species_from_gencode,
     output:
         directory("data/{species_id}/indexes/salmon/{species_id}")
     log:
@@ -445,19 +451,53 @@ rule salmon_idx_from_gencode:
     params:
         out_idx="data/{species_id}/indexes/salmon/{species_id}",
         decoys_txt= "data/{species_id}/annotation/{species_id}.decoys.txt",
-    threads: 12,
+    threads: 30,
     resources:
         mem_gb=50,
     envmodules:
         config["salmon"],
     shell:
-        """
-        salmon index -t {input} -i {params.out_idx} --gencode -d {params.decoys_txt} -p {threads}
+        """        
+        if [[ "{input.gentrome_fa}" == *"gencode"* ]]
+        then 
+            salmon index -t {input} -i {params.out_idx} --gencode -d {params.decoys_txt} -p {threads}
+        else 
+            salmon index -t {input} -i {params.out_idx} -d {params.decoys_txt} -p {threads} 
+        fi
         """
 
-            # shell("""
-            #     salmon index -t {input.gentrome_fa} -i {params.out_idx} -d {params.decoys_txt} -p {threads}
-            #     """
+# def get_species_from_not_gencode(wildcards):
+#     input_list=list()
+#     species_ids_list = species[species.tx_fasta.notnull()]['id'].values
+#
+#     for i in species_ids_list:
+#         if "gencode" not in i:
+#             result = "data/{species_id}/annotation/{species_id}.gentrome.fa".format(species_id=i)
+#             input_list.append(result)
+#     return input_list
+
+# rule salmon_idx_from_not_gencode:
+#     input:
+#         get_species_from_not_gencode,
+#     output:
+#         directory("data/{species_id}/indexes/salmon/{species_id}")
+#     log:
+#         stdout="logs/salmon_idx/{species_id}.o",
+#         stderr="logs/salmon_idx/{species_id}.e",
+#     benchmark:
+#         "benchmarks/salmon_idx/{species_id}.txt",
+#     params:
+#         out_idx="data/{species_id}/indexes/salmon/{species_id}",
+#         decoys_txt= "data/{species_id}/annotation/{species_id}.decoys.txt",
+#     threads: 30,
+#     resources:
+#         mem_gb=50,
+#     envmodules:
+#         config["salmon"],
+#     shell:
+#         """
+#         salmon index -t {input} -i {params.out_idx} -d {params.decoys_txt} -p {threads}
+#         """
 
 # We need the genome fai as input because we check that the chromosome names are compatible between the blacklist and the genome
 rule download_blacklist:
