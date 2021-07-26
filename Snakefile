@@ -46,7 +46,9 @@ rule timestamp_backup:
         expand("data/{species.id}/indexes/bwa/{species.id}.bwt", species=species.itertuples()),
         expand("data/{species.id}/indexes/bowtie2/{species.id}.1.bt2", species=species.itertuples()),
         #expand("data/{species.id}/indexes/kb_lamanno/{species.id}.idx", species=species[-species["species"].str.contains("coli")].itertuples()),
-        expand("data/{species.id}/indexes/bismark/{species.id}.fa", species=species.itertuples()),
+        expand("data/{species.id}/indexes/kallisto/{species.id}", species=species.itertuples()),
+        expand("data/{species.id}/indexes/salmon/{species.id}", species=species.itertuples()),
+        expand("data/{species.id}/annotation/{species.id}.gentrome.fa", species=species.itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
         expand("data/{hybrid_genome_id}/indexes/bwa/{hybrid_genome_id}.bwt", hybrid_genome_id=hybrid_genomes.id),
@@ -94,7 +96,7 @@ ruleorder: cat_hybrid_seq > download_genome_fasta
 ruleorder: cat_hybrid_gtf > download_genes_gtf
 
 rule download_genome_fasta:
-    input: 
+    input:
 
     output:
         "data/{species_id}/sequence/{species_id}.fa"
@@ -125,13 +127,13 @@ rule download_genome_fasta:
         """
 
 rule fai_and_dict:
-    input: 
-        genome_fa="data/{species_id}/sequence/{species_id}.fa", 
+    input:
+        genome_fa="data/{species_id}/sequence/{species_id}.fa",
     output:
         fai="data/{species_id}/sequence/{species_id}.fa.fai",
         dict="data/{species_id}/sequence/{species_id}.dict",
         temp=temp(directory("data/{species_id}/temp/")),
-        
+
     log:
         stdout="logs/fai_and_dict/{species_id}.o",
         stderr="logs/fai_and_dict/{species_id}.e",
@@ -161,15 +163,15 @@ rule fai_and_dict:
         """
 
 rule download_genes_gtf:
-    input: 
+    input:
 
     output:
         "data/{species_id}/annotation/{species_id}.gtf"
-        
+
     log:
         stdout="logs/download_genes_gtf/{species_id}.o",
         stderr="logs/download_genes_gtf/{species_id}.e",
- 
+
     benchmark:
         "benchmarks/download_genes_gtf/{species_id}.txt"
     params:
@@ -195,15 +197,15 @@ rule download_basic_genes_gtf:
     """
     Download gtf with only the representative transcript for each gene and focuses on protein coding genes.
     """
-    input: 
+    input:
 
     output:
         "data/{species_id}/annotation/{species_id}.basic.gtf"
-        
+
     log:
         stdout="logs/download_basic_genes_gtf/{species_id}.o",
         stderr="logs/download_basic_genes_gtf/{species_id}.e",
- 
+
     benchmark:
         "benchmarks/download_basic_genes_gtf/{species_id}.txt"
     params:
@@ -226,11 +228,11 @@ rule download_basic_genes_gtf:
         """
 
 rule download_tx_fasta:
-    input: 
+    input:
 
     output:
         "data/{species_id}/annotation/{species_id}.transcripts.fasta"
-        
+
     log:
         stdout="logs/download_tx_fasta/{species_id}.o",
         stderr="logs/download_tx_fasta/{species_id}.e",
@@ -258,14 +260,14 @@ rule download_tx_fasta:
 
 
 rule star_idx:
-    input: 
+    input:
         genome_fa="data/{species_id}/sequence/{species_id}.fa",
         genes_gtf="data/{species_id}/annotation/{species_id}.gtf"
     output:
         "data/{species_id}/indexes/star/Log.out",
         "data/{species_id}/indexes/star/SA",
         "data/{species_id}/indexes/star/SAindex"
-        
+
     log:
         stdout="logs/star_idx/{species_id}.o",
         stderr="logs/star_idx/{species_id}.e",
@@ -293,12 +295,12 @@ rule star_idx:
         """
 
 rule bwa_idx:
-    input: 
+    input:
         #genome_fa=lambda wildcards: "data/{species_id}/sequence/{species_id}.fa" if ({wildcards.species_id} in species['id'].values) else "data/withSpikein_{species_id}/sequence/{species_id}.fa",
-        genome_fa="data/{species_id}/sequence/{species_id}.fa" 
+        genome_fa="data/{species_id}/sequence/{species_id}.fa"
     output:
         "data/{species_id}/indexes/bwa/{species_id}.bwt",
-        "data/{species_id}/indexes/bwa/{species_id}.sa" 
+        "data/{species_id}/indexes/bwa/{species_id}.sa"
     log:
         stdout="logs/bwa_idx/{species_id}.o",
         stderr="logs/bwa_idx/{species_id}.e",
@@ -323,11 +325,11 @@ rule bwa_idx:
         """
 
 rule bowtie2_idx:
-    input: 
+    input:
         genome_fa="data/{species_id}/sequence/{species_id}.fa",
     output:
         "data/{species_id}/indexes/bowtie2/{species_id}.1.bt2",
-        "data/{species_id}/indexes/bowtie2/{species_id}.2.bt2" 
+        "data/{species_id}/indexes/bowtie2/{species_id}.2.bt2"
     log:
         stdout="logs/bowtie2_idx/{species_id}.o",
         stderr="logs/bowtie2_idx/{species_id}.e",
@@ -350,7 +352,7 @@ rule bowtie2_idx:
 
 bismark_threads=16 # must be even number
 rule bismark_idx:
-    input: 
+    input:
         genome_fa="data/{species_id}/sequence/{species_id}.fa",
     output:
         "data/{species_id}/indexes/bismark/{species_id}.fa",
@@ -376,9 +378,130 @@ rule bismark_idx:
             
         """
 
+rule kallisto_idx:
+    input:
+        tx_fa="data/{species_id}/annotation/{species_id}.transcripts.fasta"
+    output:
+        "data/{species_id}/indexes/kallisto/{species_id}"
+    log:
+        stdout="logs/kallisto_idx/{species_id}.o",
+        stderr="logs/kallisto_idx/{species_id}.e",
+    benchmark:
+        "benchmarks/kallisto_idx/{species_id}.txt",
+    params:
+        out_idx="data/{species_id}/indexes/kallisto/{species_id}",
+    threads: 4,
+    resources:
+        mem_gb=50,
+    envmodules:
+        config["kallisto"],
+    shell:
+        """
+        kallisto index -i {params.out_idx} {input.tx_fa}
+        """
+
+rule build_salmon_gentrome_fa:
+    input:
+        genome_fa = "data/{species_id}/sequence/{species_id}.fa",
+        tx_fa="data/{species_id}/annotation/{species_id}.transcripts.fasta",
+    output:
+        gentrome_fa ="data/{species_id}/annotation/{species_id}.gentrome.fa",
+    log:
+        stdout="logs/build_salmon_tx_fa/{species_id}.o",
+        stderr="logs/build_salmon_tx_fa/{species_id}.e",
+    benchmark:
+        "benchmarks/build_salmon_tx_fa/{species_id}.txt",
+    params:
+        decoys_txt = "data/{species_id}/annotation/{species_id}.decoys.txt",
+    threads: 1,
+    resources:
+        mem_gb=10,
+    shell:
+        """
+        grep "^>" <{input.genome_fa} | cut -d " " -f 1 > {params.decoys_txt}
+        sed -i.bak -e "s/>//g" {params.decoys_txt}
+        cat {input.tx_fa} {input.genome_fa} > {output.gentrome_fa}
+        """
+
+# ruleorder: salmon_idx_from_gencode > salmon_idx_from_not_gencode
+
+## if a transcript.fa from gencode references
+# def get_species_from_gencode(wildcards):
+#     input_list=list()
+#     species_ids_list = species[species.tx_fasta.notnull()]['id'].values
+#
+#     for i in species_ids_list:
+#         if "gencode" in i:
+#             result = "data/{species_id}/annotation/{species_id}.gentrome.fa".format(species_id=i)
+#             input_list.append(result)
+#     return input_list
+
+# rule salmon_idx_from_gencode:
+rule salmon_idx:
+    input:
+        gentrome_fa="data/{species_id}/annotation/{species_id}.gentrome.fa"
+        # get_species_from_gencode,
+    output:
+        directory("data/{species_id}/indexes/salmon/{species_id}")
+    log:
+        stdout="logs/salmon_idx/{species_id}.o",
+        stderr="logs/salmon_idx/{species_id}.e",
+    benchmark:
+        "benchmarks/salmon_idx/{species_id}.txt",
+    params:
+        out_idx="data/{species_id}/indexes/salmon/{species_id}",
+        decoys_txt= "data/{species_id}/annotation/{species_id}.decoys.txt",
+    threads: 30,
+    resources:
+        mem_gb=50,
+    envmodules:
+        config["salmon"],
+    shell:
+        """        
+        if [[ "{input.gentrome_fa}" == *"gencode"* ]]
+        then 
+            salmon index -t {input} -i {params.out_idx} --gencode -d {params.decoys_txt} -p {threads}
+        else 
+            salmon index -t {input} -i {params.out_idx} -d {params.decoys_txt} -p {threads} 
+        fi
+        """
+
+# def get_species_from_not_gencode(wildcards):
+#     input_list=list()
+#     species_ids_list = species[species.tx_fasta.notnull()]['id'].values
+#
+#     for i in species_ids_list:
+#         if "gencode" not in i:
+#             result = "data/{species_id}/annotation/{species_id}.gentrome.fa".format(species_id=i)
+#             input_list.append(result)
+#     return input_list
+
+# rule salmon_idx_from_not_gencode:
+#     input:
+#         get_species_from_not_gencode,
+#     output:
+#         directory("data/{species_id}/indexes/salmon/{species_id}")
+#     log:
+#         stdout="logs/salmon_idx/{species_id}.o",
+#         stderr="logs/salmon_idx/{species_id}.e",
+#     benchmark:
+#         "benchmarks/salmon_idx/{species_id}.txt",
+#     params:
+#         out_idx="data/{species_id}/indexes/salmon/{species_id}",
+#         decoys_txt= "data/{species_id}/annotation/{species_id}.decoys.txt",
+#     threads: 30,
+#     resources:
+#         mem_gb=50,
+#     envmodules:
+#         config["salmon"],
+#     shell:
+#         """
+#         salmon index -t {input} -i {params.out_idx} -d {params.decoys_txt} -p {threads}
+#         """
+
 # We need the genome fai as input because we check that the chromosome names are compatible between the blacklist and the genome
 rule download_blacklist:
-    input: 
+    input:
         genome_fai="data/{species_id}/sequence/{species_id}.fa.fai"
     output:
         "data/{species_id}/blacklist/{blacklist_id}.bed"
@@ -458,7 +581,7 @@ rule kb_lamanno:
         """
 
 rule download_gatk_resource_bundle:
-    input: 
+    input:
     output:
         touch=touch("data/{species_id}/gatk_resource_bundle/done.txt"),
     log:
@@ -538,13 +661,13 @@ def get_species_and_spikein_seqs(wildcards):
     # get the comma-separated species ids and prefixes
     species_ids = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['species_ids'].values[0]
     species_prefs = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['species_prefs'].values[0]
-    
+
     # split into a list
     species_ids_list = species_ids.split(",")
 
     if len(species_ids_list) > 1:
         species_prefs_list = species_prefs.split(",")
-        
+
         # get the original files for the first species
         first_species_paths = ["data/{id}/sequence/{id}.fa".format(id=species_ids_list[0])]
 
@@ -600,13 +723,13 @@ def get_species_and_spikein_gtfs(wildcards):
     # get the comma-separated species ids and prefixes
     species_ids = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['species_ids'].values[0]
     species_prefs = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['species_prefs'].values[0]
-    
+
     # split into a list
     species_ids_list = species_ids.split(",")
 
     if len(species_ids_list) > 1:
         species_prefs_list = species_prefs.split(",")
-        
+
         # get the original files for the first species
         first_species_paths = ["data/{id}/annotation/{id}.gtf".format(id=species_ids_list[0])]
 
@@ -618,7 +741,7 @@ def get_species_and_spikein_gtfs(wildcards):
     else:
         # else get the original species files
         species_paths = ["data/{id}/annotation/{id}.gtf".format(id=species_ids)]
-    
+
     # get spikein ids
     spikein_ids = hybrid_genomes[hybrid_genomes.id == wildcards.hybrid_id]['spikein_ids'].values[0]
 
@@ -633,7 +756,7 @@ def get_species_and_spikein_gtfs(wildcards):
         input_paths = species_paths + spikein_paths
     else:
         input_paths = species_paths
-    
+
     return input_paths
 
 # need to keep cat_hybrid_seq and cat_hybrid_gtf separate because some spikeins don't have a GTF file.
