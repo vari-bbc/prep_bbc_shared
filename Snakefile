@@ -49,7 +49,7 @@ rule timestamp_backup:
         expand("data/{species.id}/indexes/bismark/{species.id}.fa", species=species.itertuples()),
         #expand("data/{species.id}/indexes/kallisto/{species.id}", species=species.itertuples()),
         #expand("data/{species.id}/indexes/salmon/{species.id}", species=species.itertuples()),
-        expand("data/{species.id}/annotation/{species.id}.gentrome.fa", species=species.itertuples()),
+        #expand("data/{species.id}/annotation/{species.id}.gentrome.fa", species=species.itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
         expand("data/{hybrid_genome_id}/indexes/bwa/{hybrid_genome_id}.bwt", hybrid_genome_id=hybrid_genomes.id),
