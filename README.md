@@ -15,9 +15,7 @@ Table of Contents
 
 1. For BBC members, don't clone this repo, just work from the previously cloned directory.
 
-   ```cd /secondary/projects/bbc/research/prep_bbc_shared_current```
-
-   Note: Previously, we had index files in `/secondary/projects/bbc/research/prep_bbc_shared`. That directory is now deprecated.
+   ```cd /varidata/research/projects/bbc/research/prep_bbc_shared_current```
 
 2. Add new rows to the 'species.tsv', 'hybrid_genomes.tsv', and/or 'spikeins.tsv' as needed. If you simply want to compute the index files for a new species, you only need to add a row with the relevant information to 'species.tsv'. For more information about the other two files, see [Hybrid genomes and spike-in references](#hybrid-genomes-and-spike-in-references).
 
@@ -27,9 +25,9 @@ Table of Contents
 
 # Incremental backups after each run
 
-In order to allow specific index or resource files to be permanently accessible, after every run, this workflow creates a timestamped copy of the entire workflow directory at `/secondary/projects/bbc/research/prep_bbc_shared_timestamped/<timestamp>`. This backup mechanism is specified by the 'timestamp_backup' rule.
+In order to allow specific index or resource files to be permanently accessible, after every run, this workflow creates a timestamped copy of the entire workflow directory at `/varidata/research/projects/bbc/versioned_references/<timestamp>_v<version_num>`. This backup mechanism is specified by the 'timestamp_backup' rule.
 
-To save space, an incremental backup strategy is used. Inside the `prep_bbc_shared_timestamped/` directory is a symlink called 'latest' that always points to the latest timestamped directory. During each backup, `rsync` is used to compare the checksums of the files in 'latest' and the newly generated files. If the files are unchanged, hard links to the 'latest' directory are created in the new backup. Otherwise, files will be copied for the new backup. After `rsync` is run to completion, the 'latest' symlink is updated to the new time-stamped directory.
+To save space, an incremental backup strategy is used. Inside the `versioned_references/` directory is a symlink called 'latest' that always points to the latest timestamped directory. During each backup, the checksums of the files in 'latest' are compared with those of the newly generated files. If the files are unchanged, hard links to the 'latest' directory are created in the new backup. Otherwise, files will be copied for the new backup. At the end of the 'timestamp_backup' rule, the 'latest' symlink is updated to the newest time-stamped directory.
 
 # The 'species' file
 
