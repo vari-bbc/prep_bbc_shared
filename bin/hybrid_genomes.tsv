@@ -1,5 +1,7 @@
 id	species_ids	species_prefs	spikein_ids
 mm10_gencode_plus_ERCC92	mm10_gencode		ERCC92
+hg19_gencode_plus_ERCC92	hg19_gencode		ERCC92
+hg19_gencode_plus_viruses	hg19_gencode		viruses
 mm10_gencode_plus_e.coli-K12-mg1665_ensembl	mm10_gencode,e.coli-K12-mg1665_ensembl	mm,ec	
 mm10_gencode_plus_viruses_and_cfmedips	mm10_gencode		viruses,cfmedips
 mm_BALB_CJ_plus_viruses_and_cfmedips	mm_BALB_CJ		viruses,cfmedips
