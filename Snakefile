@@ -49,6 +49,7 @@ rule timestamp_backup:
         expand("data/{species.id}/indexes/bismark/{species.id}.fa", species=species.itertuples()),
         expand("data/{species.id}/indexes/kallisto/{species.id}", species=species.itertuples()),
         expand("data/{species.id}/indexes/salmon/{species.id}", species=species.itertuples()),
+        expand("data/{species.id}/indexes/biscuit/{species.id}.fa.{suff}", suff=["bis.pac","bis.amb","bis.ann","par.bwt","par.sa","dau.bwt","dau.sa"], species=species.itertuples()),
         #expand("data/{species.id}/annotation/{species.id}.gentrome.fa", species=species.itertuples()),
         expand("data/{species_id}/gatk_resource_bundle/done.txt", species_id=species[species.gatk_resource_bundle.notnull()]['id'].values),
         expand("data/{species.id}/blacklist/{species.blacklist_id}.bed", species=species[(species.replace(np.nan, '', regex=True)["blacklist"] != "") & (species.replace(np.nan, '', regex=True)["blacklist_id"] != "")].itertuples()),
@@ -277,10 +278,11 @@ rule star_idx:
         "benchmarks/star_idx/{species_id}.txt"
     params:
         sjdb_overhang=100,
-        outpref="data/{species_id}/indexes/star/"
+        outpref="data/{species_id}/indexes/star/",
+        ram=290000000000
     threads:16
     resources:
-        mem_gb=100
+        mem_gb=300
     envmodules:
         config["STAR"]
     shell:
@@ -291,7 +293,8 @@ rule star_idx:
             --genomeDir {params.outpref} \
             --genomeFastaFiles {input.genome_fa} \
             --sjdbGTFfile {input.genes_gtf} \
-            --sjdbOverhang {params.sjdb_overhang} 
+            --sjdbOverhang {params.sjdb_overhang} \
+            --limitGenomeGenerateRAM {params.ram}
             
         """
 
@@ -320,6 +323,33 @@ rule bwa_idx:
         #ln -s "$(pwd)/{input.genome_fa}" {params.outpref}
         
         bwa index \
+        -p {params.outpref} \
+        {input.genome_fa} 
+            
+        """
+
+rule biscuit_idx:
+    input:
+        genome_fa="data/{species_id}/sequence/{species_id}.fa"
+    output:
+        expand("data/{{species_id}}/indexes/biscuit/{{species_id}}.fa.{suff}", suff=["bis.pac","bis.amb","bis.ann","par.bwt","par.sa","dau.bwt","dau.sa"]),
+    log:
+        stdout="logs/biscuit_idx/{species_id}.o",
+        stderr="logs/biscuit_idx/{species_id}.e",
+
+    benchmark:
+        "benchmarks/biscuit_idx/{species_id}.txt"
+    params:
+        outpref="data/{species_id}/indexes/biscuit/{species_id}.fa"
+    threads:4
+    resources:
+        mem_gb=100
+    envmodules:
+        config["biscuit"]
+    shell:
+        """
+        
+        biscuit index \
         -p {params.outpref} \
         {input.genome_fa} 
             
@@ -454,7 +484,7 @@ rule salmon_idx:
         decoys_txt= "data/{species_id}/annotation/{species_id}.decoys.txt",
     threads: 30,
     resources:
-        mem_gb=50,
+        mem_gb=300,
     envmodules:
         config["salmon"],
     shell:
