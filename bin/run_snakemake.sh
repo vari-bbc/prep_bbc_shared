@@ -1,22 +1,18 @@
-#PBS -l walltime=100:00:00
-#PBS -l mem=8gb
-#PBS -N prep_bbc_shared_workflow
-#PBS -o logs/prep_bbc_shared_workflow.o
-#PBS -e logs/prep_bbc_shared_workflow.e
-#PBS -W umask=002
+#!/bin/bash
+#SBATCH --export=NONE
+#SBATCH -J prep_bbc_shared_workflow
+#SBATCH -o logs/prep_bbc_shared_workflow.o
+#SBATCH -e logs/prep_bbc_shared_workflow.e
+#SBATCH --ntasks 1
+#SBATCH --time 100:00:00
+#SBATCH --mem=8G
+#SBATCH --partition=long
 
-cd ${PBS_O_WORKDIR}
+cd $SLURM_SUBMIT_DIR
 
-snakemake_module="bbc/snakemake/snakemake-6.1.0"
+snakemake_module="bbc2/snakemake/snakemake-7.25.0"
 
 module load $snakemake_module
-
-# make temp directory for tools that need it
-#if [ ! -d "./temp/" ]
-#then
-#    mkdir ./temp/
-#fi
-
 
 # save DAG job file with time stamp
 TIME=$(date "+%Y-%m-%d_%H.%M.%S")
@@ -29,19 +25,27 @@ snakemake --dag | dot -Tpng > logs/dag.png
 snakemake --filegraph | dot -Tpng > logs/filegraph.png
 snakemake --rulegraph | dot -Tpng > logs/rulegraph.png
 
-# run snakemake
+
+echo "Start snakemake workflow." >&1                   
+echo "Start snakemake workflow." >&2     
+
 snakemake \
 -p \
 --latency-wait 20 \
+--snakefile 'Snakefile' \
 --use-envmodules \
 --jobs 50 \
---cluster "ssh ${PBS_O_LOGNAME}@submit 'module load ${snakemake_module}; cd ${PBS_O_WORKDIR}; qsub \
--V \
--q bbc \
--l nodes=1:ppn={threads} \
--l mem={resources.mem_gb}gb \
--l walltime=100:00:00 \
--W umask=002 \
--o {log.stdout} \
--e {log.stderr}'" \
---conda-frontend conda
+--cluster "mkdir -p logs/{rule}; sbatch \
+-p ${SLURM_JOB_PARTITION} \
+--export=ALL \
+--ntasks {threads} \
+--mem={resources.mem_gb}G \
+-t 100:00:00 \
+-o logs/{rule}/{resources.log_prefix}.o \
+-e logs/{rule}/{resources.log_prefix}.e" # SLURM hangs if output dir does not exist, so we create it before running sbatch on the snakemake jobs.
+#--slurm \
+#--default-resources slurm_account=${SLURM_JOB_USER} slurm_partition=${SLURM_JOB_PARTITION}
+
+echo "snakemake workflow done." >&1                   
+echo "snakemake workflow done." >&2                
+

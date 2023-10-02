@@ -61,8 +61,8 @@ rule timestamp_backup:
         flag=touch("{timestamp_dir}{{timestr}}/rsync.done".format(timestamp_dir=timestamp_dir)),
         outdir=directory("{timestamp_dir}{{timestr}}".format(timestamp_dir=timestamp_dir))
     log:
-        stdout="logs/timestamp_backup/{timestr}.o",
-        stderr="logs/timestamp_backup/{timestr}.e",
+
+
 
     benchmark:
         "benchmarks/timestamp_backup/{timestr}.txt"
@@ -72,7 +72,8 @@ rule timestamp_backup:
         #backupPath=lambda wildcards: "{timestamp_dir}{timestr}".format(timestamp_dir=timestamp_dir, timestr=wildcards.timestr)
     threads:1
     resources:
-        mem_gb=64
+        mem_gb=64,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["python3"]
     shell:
@@ -104,8 +105,8 @@ rule download_genome_fasta:
         "data/{species_id}/sequence/{species_id}.fa"
 
     log:
-        stdout="logs/download_genome_fasta/{species_id}.o",
-        stderr="logs/download_genome_fasta/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/download_genome_fasta/{species_id}.txt"
@@ -113,7 +114,8 @@ rule download_genome_fasta:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'genome_fasta'].values[0]
     threads:1
     resources:
-        mem_gb=16
+        mem_gb=16,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
     shell:
         """
@@ -137,15 +139,16 @@ rule fai_and_dict:
         temp=temp(directory("data/{species_id}/temp/")),
 
     log:
-        stdout="logs/fai_and_dict/{species_id}.o",
-        stderr="logs/fai_and_dict/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/fai_and_dict/{species_id}.txt"
     params:
     threads:1
     resources:
-        mem_gb=30
+        mem_gb=30,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["samtools"],
         config["picard"]
@@ -171,8 +174,8 @@ rule download_genes_gtf:
         "data/{species_id}/annotation/{species_id}.gtf"
 
     log:
-        stdout="logs/download_genes_gtf/{species_id}.o",
-        stderr="logs/download_genes_gtf/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/download_genes_gtf/{species_id}.txt"
@@ -180,7 +183,8 @@ rule download_genes_gtf:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'gene_gtf'].values[0]
     threads:1
     resources:
-        mem_gb=16
+        mem_gb=16,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
     shell:
         """
@@ -205,8 +209,8 @@ rule download_basic_genes_gtf:
         "data/{species_id}/annotation/{species_id}.basic.gtf"
 
     log:
-        stdout="logs/download_basic_genes_gtf/{species_id}.o",
-        stderr="logs/download_basic_genes_gtf/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/download_basic_genes_gtf/{species_id}.txt"
@@ -214,7 +218,8 @@ rule download_basic_genes_gtf:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'gene_basic_gtf'].values[0]
     threads:1
     resources:
-        mem_gb=16
+        mem_gb=16,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
     shell:
         """
@@ -236,8 +241,8 @@ rule download_tx_fasta:
         "data/{species_id}/annotation/{species_id}.transcripts.fasta"
 
     log:
-        stdout="logs/download_tx_fasta/{species_id}.o",
-        stderr="logs/download_tx_fasta/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/download_tx_fasta/{species_id}.txt"
@@ -245,7 +250,8 @@ rule download_tx_fasta:
         url=lambda wildcards: species.loc[species.id == wildcards.species_id,'tx_fasta'].values[0]
     threads:1
     resources:
-        mem_gb=16
+        mem_gb=16,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
     shell:
         """
@@ -271,8 +277,8 @@ rule star_idx:
         "data/{species_id}/indexes/star/SAindex"
 
     log:
-        stdout="logs/star_idx/{species_id}.o",
-        stderr="logs/star_idx/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/star_idx/{species_id}.txt"
@@ -282,7 +288,8 @@ rule star_idx:
         ram=290000000000
     threads:16
     resources:
-        mem_gb=300
+        mem_gb=300,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["STAR"]
     shell:
@@ -306,8 +313,8 @@ rule bwa_idx:
         "data/{species_id}/indexes/bwa/{species_id}.bwt",
         "data/{species_id}/indexes/bwa/{species_id}.sa"
     log:
-        stdout="logs/bwa_idx/{species_id}.o",
-        stderr="logs/bwa_idx/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/bwa_idx/{species_id}.txt"
@@ -315,7 +322,8 @@ rule bwa_idx:
         outpref="data/{species_id}/indexes/bwa/{species_id}"
     threads:4
     resources:
-        mem_gb=100
+        mem_gb=100,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["bwa"]
     shell:
@@ -334,8 +342,8 @@ rule biscuit_idx:
     output:
         expand("data/{{species_id}}/indexes/biscuit/{{species_id}}.fa.{suff}", suff=["bis.pac","bis.amb","bis.ann","par.bwt","par.sa","dau.bwt","dau.sa"]),
     log:
-        stdout="logs/biscuit_idx/{species_id}.o",
-        stderr="logs/biscuit_idx/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/biscuit_idx/{species_id}.txt"
@@ -343,7 +351,8 @@ rule biscuit_idx:
         outpref="data/{species_id}/indexes/biscuit/{species_id}.fa"
     threads:4
     resources:
-        mem_gb=100
+        mem_gb=100,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["biscuit"]
     shell:
@@ -362,15 +371,16 @@ rule bowtie2_idx:
         "data/{species_id}/indexes/bowtie2/{species_id}.1.bt2",
         "data/{species_id}/indexes/bowtie2/{species_id}.2.bt2"
     log:
-        stdout="logs/bowtie2_idx/{species_id}.o",
-        stderr="logs/bowtie2_idx/{species_id}.e",
+
+
     benchmark:
         "benchmarks/bowtie2_idx/{species_id}.txt"
     params:
         outpref="data/{species_id}/indexes/bowtie2/{species_id}"
     threads:8
     resources:
-        mem_gb=100
+        mem_gb=100,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["bowtie2"],
         config["python3"]
@@ -389,8 +399,8 @@ rule bismark_idx:
         "data/{species_id}/indexes/bismark/{species_id}.fa",
         directory("data/{species_id}/indexes/bismark/Bisulfite_Genome")
     log:
-        stdout="logs/bismark_idx/{species_id}.o",
-        stderr="logs/bismark_idx/{species_id}.e",
+
+
     benchmark:
         "benchmarks/bismark_idx/{species_id}.txt"
     params:
@@ -398,7 +408,8 @@ rule bismark_idx:
         parallel=int(bismark_threads/2)
     threads:bismark_threads
     resources:
-        mem_gb=100
+        mem_gb=100,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["bismark"]
     shell:
@@ -415,8 +426,8 @@ rule kallisto_idx:
     output:
         "data/{species_id}/indexes/kallisto/{species_id}"
     log:
-        stdout="logs/kallisto_idx/{species_id}.o",
-        stderr="logs/kallisto_idx/{species_id}.e",
+
+
     benchmark:
         "benchmarks/kallisto_idx/{species_id}.txt",
     params:
@@ -424,6 +435,7 @@ rule kallisto_idx:
     threads: 4,
     resources:
         mem_gb=50,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["kallisto"],
     shell:
@@ -438,8 +450,8 @@ rule build_salmon_gentrome_fa:
     output:
         gentrome_fa ="data/{species_id}/annotation/{species_id}.gentrome.fa",
     log:
-        stdout="logs/build_salmon_tx_fa/{species_id}.o",
-        stderr="logs/build_salmon_tx_fa/{species_id}.e",
+
+
     benchmark:
         "benchmarks/build_salmon_tx_fa/{species_id}.txt",
     params:
@@ -447,6 +459,7 @@ rule build_salmon_gentrome_fa:
     threads: 1,
     resources:
         mem_gb=10,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     shell:
         """
         grep "^>" <{input.genome_fa} | cut -d " " -f 1 > {params.decoys_txt}
@@ -475,8 +488,8 @@ rule salmon_idx:
     output:
         directory("data/{species_id}/indexes/salmon/{species_id}")
     log:
-        stdout="logs/salmon_idx/{species_id}.o",
-        stderr="logs/salmon_idx/{species_id}.e",
+
+
     benchmark:
         "benchmarks/salmon_idx/{species_id}.txt",
     params:
@@ -485,6 +498,7 @@ rule salmon_idx:
     threads: 30,
     resources:
         mem_gb=300,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["salmon"],
     shell:
@@ -513,8 +527,8 @@ rule salmon_idx:
 #     output:
 #         directory("data/{species_id}/indexes/salmon/{species_id}")
 #     log:
-#         stdout="logs/salmon_idx/{species_id}.o",
-#         stderr="logs/salmon_idx/{species_id}.e",
+
+
 #     benchmark:
 #         "benchmarks/salmon_idx/{species_id}.txt",
 #     params:
@@ -537,8 +551,8 @@ rule download_blacklist:
     output:
         "data/{species_id}/blacklist/{blacklist_id}.bed"
     log:
-        stdout="logs/blacklist/{species_id}.{blacklist_id}.o",
-        stderr="logs/blacklist/{species_id}.{blacklist_id}.e",
+
+
 
     benchmark:
         "benchmarks/blacklist/{species_id}.{blacklist_id}.txt"
@@ -547,7 +561,8 @@ rule download_blacklist:
         temp_chroms="data/{species_id}/blacklist/{blacklist_id}_chroms.temp"
     threads:1
     resources:
-        mem_gb=16
+        mem_gb=16,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
     shell:
         """
@@ -571,53 +586,14 @@ rule download_blacklist:
            
         """
 
-rule kb_lamanno:
-    input:
-        genome_fa="data/{species_id}/sequence/{species_id}.fa",
-        genes_gtf="data/{species_id}/annotation/{species_id}.gtf"
-    output:
-        idx="data/{species_id}/indexes/kb_lamanno/{species_id}.idx",
-        t2g="data/{species_id}/indexes/kb_lamanno/{species_id}.transcripts_to_genes.txt",
-        cdna="data/{species_id}/indexes/kb_lamanno/{species_id}.cdna.fa",
-        introns="data/{species_id}/indexes/kb_lamanno/{species_id}.intron.fa",
-        cdna_tr2cap="data/{species_id}/indexes/kb_lamanno/{species_id}.cdna_tr2cap.txt",
-        introns_tr2cap="data/{species_id}/indexes/kb_lamanno/{species_id}.intron_tr2cap.txt"
-    log:
-        stdout="logs/kb_lamanno/{species_id}.o",
-        stderr="logs/kb_lamanno/{species_id}.e",
-    benchmark:
-        "benchmarks/kb_lamanno/{species_id}.txt"
-    envmodules:
-        config["kb-python"]
-    resources:
-        mem_gb=160
-    shadow: "shallow"
-    threads:4
-    params:
-    shell:
-        """
-        # because kb ref 0.24.4 makes and uses a tmp/ in the working directory, there will be collisions if you run kb ref for multiple species at the same time. The files in tmp/ are generically named, sorted.fa and sorted.gtf. 
-        #The devel version of kb allows user to specify dustom tmp directory location but not in the latest release. 
-        # as a workaround we use the shadow rule feature of snakemake. "Shadow rules result in each execution of the rule to be run in isolated temporary directories."
-        kb ref \
-        -i {output.idx} \
-        -g {output.t2g} \
-        -f1 {output.cdna} \
-        -f2 {output.introns} \
-        -c1 {output.cdna_tr2cap} \
-        -c2 {output.introns_tr2cap} \
-        --lamanno \
-        {input.genome_fa} \
-        {input.genes_gtf} 
-        """
 
 rule download_gatk_resource_bundle:
     input:
     output:
         touch=touch("data/{species_id}/gatk_resource_bundle/done.txt"),
     log:
-        stdout="logs/gatk_resource_bundle/{species_id}.o",
-        stderr="logs/gatk_resource_bundle/{species_id}.e",
+
+
 
     benchmark:
         "benchmarks/gatk_resource_bundle/{species_id}.txt"
@@ -626,7 +602,8 @@ rule download_gatk_resource_bundle:
         outdir="data/{species_id}/gatk_resource_bundle/"
     threads:4
     resources:
-        mem_gb=64
+        mem_gb=64,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["parallel"],
         config["gsutil"]
@@ -647,15 +624,16 @@ rule add_species_prefs_for_hybrid_fa:
     output:
         "data/{species_id}/add_species_prefs_for_hybrid/{species_id}.{species_pref}_prefixed.fa",
     log:
-        stdout="logs/add_species_prefs_for_hybrid_fa/{species_id}.{species_pref}.o",
-        stderr="logs/add_species_prefs_for_hybrid_fa/{species_id}.{species_pref}.e"
+
+
     benchmark:
         "benchmarks/add_species_prefs_for_hybrid_fa/{species_id}.{species_pref}.txt"
     params:
         pref="{species_pref}"
     threads:1
     resources:
-        mem_gb=1
+        mem_gb=1,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
     shell:
         """
@@ -672,15 +650,16 @@ rule add_species_prefs_for_hybrid_gtf:
     output:
         "data/{species_id}/add_species_prefs_for_hybrid/{species_id}.{species_pref}_prefixed.gtf"
     log:
-        stdout="logs/add_species_prefs_for_hybrid_gtf/{species_id}.{species_pref}.o",
-        stderr="logs/add_species_prefs_for_hybrid_gtf/{species_id}.{species_pref}.e"
+
+
     benchmark:
         "benchmarks/add_species_prefs_for_hybrid_gtf/{species_id}.{species_pref}.txt"
     params:
         pref="{species_pref}"
     threads:1
     resources:
-        mem_gb=1
+        mem_gb=1,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
     shell:
         """
@@ -733,15 +712,16 @@ rule cat_hybrid_seq:
     output:
         "data/{hybrid_id, .+_plus_.+}/sequence/{hybrid_id}.fa",
     log:
-        stdout="logs/cat_hybrid_seq/{hybrid_id}.o",
-        stderr="logs/cat_hybrid_seq/{hybrid_id}.e",
+
+
 
     benchmark:
         "benchmarks/cat_hybrid_seq/{hybrid_id}.txt"
     params:
     threads:1
     resources:
-        mem_gb=1
+        mem_gb=1,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
         config["seqtk"]
     shell:
@@ -797,15 +777,16 @@ rule cat_hybrid_gtf:
     output:
         "data/{hybrid_id, .+_plus_.+}/annotation/{hybrid_id}.gtf",
     log:
-        stdout="logs/cat_hybrid_gtf/{hybrid_id}.o",
-        stderr="logs/cat_hybrid_gtf/{hybrid_id}.e",
+
+
 
     benchmark:
         "benchmarks/cat_hybrid_gtf/{hybrid_id}.txt"
     params:
     threads:1
     resources:
-        mem_gb=1
+        mem_gb=1,
+        log_prefix=lambda wildcards: "_".join(wildcards)
     envmodules:
     shell:
         """
