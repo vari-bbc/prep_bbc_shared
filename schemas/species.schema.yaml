@@ -14,7 +14,7 @@ properties:
   genome_fasta:
     type: string
     description: URL for genome fasta
-    pattern: ^\S+\.(fasta|fa)(\.gz)?$
+    pattern: ^\S+\.(fasta|fa|fna)(\.gz)?$
 
   gene_gtf:
     type: string
@@ -29,7 +29,7 @@ properties:
   tx_fasta:
     type: string
     description: URL for transcript fasta
-    pattern: ^\S+\.fa(sta)?(\.gz)?$
+    pattern: ^\S+\.fn?a(sta)?(\.gz)?$
 
   blacklist:
     type: string
