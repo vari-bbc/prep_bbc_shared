@@ -121,11 +121,17 @@ rule download_genome_fasta:
         """
         # download the file
         wget {params.url} -O {output} 
-            
-        # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
-        if (file {output} | grep -q 'gzip compressed' ) ; then
-            mv {output} {output}.gz
-            gunzip {output}.gz
+        
+        # if gzipped, decompress it. Need to give it a .gz suffix or gunzip will fail
+        if ( (file -L "{output}" | grep -q 'gzip compressed') ||  (file -L "{output}" | grep -q 'Blocked GNU Zip Format') ) ; then
+            echo "Downloaded file is compressed. Will run gunzip."
+            mv "{output}" "{output}.gz"
+            gunzip "{output}.gz"
+        elif ( file -L "{output}" | grep -q 'ASCII text' ) ; then
+            echo "Downloaded file is not compressed. No need to run gunzip."
+        else
+            echo "Unrecognized file format."
+            exit 1
         fi
  
         """
@@ -191,10 +197,16 @@ rule download_genes_gtf:
         # download the file
         wget {params.url} -O {output} 
             
-        # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
-        if (file {output} | grep -q 'gzip compressed' ) ; then
-            mv {output} {output}.gz
-            gunzip {output}.gz
+        # if gzipped, decompress it. Need to give it a .gz suffix or gunzip will fail
+        if ( (file -L "{output}" | grep -q 'gzip compressed') ||  (file -L "{output}" | grep -q 'Blocked GNU Zip Format') ) ; then
+            echo "Downloaded file is compressed. Will run gunzip."
+            mv "{output}" "{output}.gz"
+            gunzip "{output}.gz"
+        elif ( file -L "{output}" | grep -q 'ASCII text' ) ; then
+            echo "Downloaded file is not compressed. No need to run gunzip."
+        else
+            echo "Unrecognized file format."
+            exit 1
         fi
            
         """
@@ -226,10 +238,16 @@ rule download_basic_genes_gtf:
         # download the file
         wget {params.url} -O {output} 
             
-        # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
-        if (file {output} | grep -q 'gzip compressed' ) ; then
-            mv {output} {output}.gz
-            gunzip {output}.gz
+        # if gzipped, decompress it. Need to give it a .gz suffix or gunzip will fail
+        if ( (file -L "{output}" | grep -q 'gzip compressed') ||  (file -L "{output}" | grep -q 'Blocked GNU Zip Format') ) ; then
+            echo "Downloaded file is compressed. Will run gunzip."
+            mv "{output}" "{output}.gz"
+            gunzip "{output}.gz"
+        elif ( file -L "{output}" | grep -q 'ASCII text' ) ; then
+            echo "Downloaded file is not compressed. No need to run gunzip."
+        else
+            echo "Unrecognized file format."
+            exit 1
         fi
            
         """
@@ -258,10 +276,16 @@ rule download_tx_fasta:
         # download the file
         wget {params.url} -O {output} 
             
-        # if gzipped, decompress it. Need to give it a .gz suffix or gnzip will fail 
-        if (file {output} | grep -q 'gzip compressed' ) ; then
-            mv {output} {output}.gz
-            gunzip {output}.gz 
+        # if gzipped, decompress it. Need to give it a .gz suffix or gunzip will fail
+        if ( (file -L "{output}" | grep -q 'gzip compressed') ||  (file -L "{output}" | grep -q 'Blocked GNU Zip Format') ) ; then
+            echo "Downloaded file is compressed. Will run gunzip."
+            mv "{output}" "{output}.gz"
+            gunzip "{output}.gz"
+        elif ( file -L "{output}" | grep -q 'ASCII text' ) ; then
+            echo "Downloaded file is not compressed. No need to run gunzip."
+        else
+            echo "Unrecognized file format."
+            exit 1
         fi
            
         """
@@ -569,10 +593,16 @@ rule download_blacklist:
         # download the file
         wget {params.url} -O {output} 
             
-        # if gzipped, decompress it. Need to give it a .gz suffix or gunzip will fail 
-        if (file {output} | grep -q 'gzip compressed' ) ; then
-            mv {output} {output}.gz
-            gunzip {output}.gz 
+        # if gzipped, decompress it. Need to give it a .gz suffix or gunzip will fail
+        if ( (file -L "{output}" | grep -q 'gzip compressed') ||  (file -L "{output}" | grep -q 'Blocked GNU Zip Format') ) ; then
+            echo "Downloaded file is compressed. Will run gunzip."
+            mv "{output}" "{output}.gz"
+            gunzip "{output}.gz"
+        elif ( file -L "{output}" | grep -q 'ASCII text' ) ; then
+            echo "Downloaded file is not compressed. No need to run gunzip."
+        else
+            echo "Unrecognized file format."
+            exit 1
         fi
 
         # Store the chromosome names in the fai file in a variable
