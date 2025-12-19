@@ -9,3 +9,5 @@ mm_BALB_CJ_plus_viruses_and_cfmedips	mm_BALB_CJ		viruses,cfmedips
 mm_FVB_NJ_plus_viruses_and_cfmedips	mm_FVB_NJ		viruses,cfmedips
 hg38_gencode_plus_ERCC92	hg19_gencode		ERCC92
 hg38_gencode_plus_e.coli-K12-mg1665_ensembl	hg38_gencode,e.coli-K12-mg1665_ensembl	mm,ec	
+mm10_gencode_plus_dm6	mm10_gencode,dm6_BDGP6.28.100	mm,dm	
+mm39_gencode_plus_dm6	mm39_gencode,dm6_BDGP6.28.100	mm,dm	
