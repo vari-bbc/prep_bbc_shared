@@ -393,7 +393,11 @@ rule bowtie2_idx:
         genome_fa="data/{species_id}/sequence/{species_id}.fa",
     output:
         "data/{species_id}/indexes/bowtie2/{species_id}.1.bt2",
-        "data/{species_id}/indexes/bowtie2/{species_id}.2.bt2"
+        "data/{species_id}/indexes/bowtie2/{species_id}.2.bt2",
+        "data/{species_id}/indexes/bowtie2/{species_id}.3.bt2",
+        "data/{species_id}/indexes/bowtie2/{species_id}.4.bt2",
+        "data/{species_id}/indexes/bowtie2/{species_id}.rev.1.bt2",
+        "data/{species_id}/indexes/bowtie2/{species_id}.rev.2.bt2",
     log:
 
 
