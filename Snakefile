@@ -22,7 +22,7 @@ assert (not any(species.id.str.contains('_plus_'))), "_plus_ is reserved to indi
 spikeins = pd.read_table("bin/spikeins.tsv", dtype=str)
 validate(spikeins, "schemas/spikeins.schema.yaml")
 
-hybrid_genomes = pd.read_table("bin/hybrid_genomes.tsv", dtype=str)
+hybrid_genomes = pd.read_table("bin/hybrid_genomes.tsv", dtype={'id': 'str', 'species_ids': 'str', 'species_prefs': 'str', 'spikein_ids': 'str', 'bowtie2_large': 'boolean'})
 validate(hybrid_genomes, "schemas/hybrid_genomes.schema.yaml")
 
 timestr = time.strftime("%Y-%m-%d_%H.%M.%S")
@@ -56,7 +56,8 @@ rule timestamp_backup:
         expand("data/{hybrid_genome_id}/indexes/bwa/{hybrid_genome_id}.bwt", hybrid_genome_id=hybrid_genomes.id),
         expand("data/{hybrid_genome_id}/sequence/{hybrid_genome_id}.{ext}", hybrid_genome_id=hybrid_genomes.id, ext=["fa.fai","dict"]),
         expand("data/{hybrid_genome_id}/indexes/star/SA", hybrid_genome_id=hybrid_genomes.id),
-        expand("data/{hybrid_genome_id}/indexes/bowtie2/{hybrid_genome_id}.1.bt2", hybrid_genome_id=hybrid_genomes.id),
+        expand("data/{hybrid_genome_id}/indexes/bowtie2/{hybrid_genome_id}.1.bt2", hybrid_genome_id=hybrid_genomes[hybrid_genomes['bowtie2_large']!=True]['id']),
+        expand("data/{hybrid_genome_id}/indexes/bowtie2/{hybrid_genome_id}.1.bt2l", hybrid_genome_id=hybrid_genomes[hybrid_genomes['bowtie2_large']==True]['id']),
     output:
         flag=touch("{timestamp_dir}{{timestr}}/rsync.done".format(timestamp_dir=timestamp_dir)),
         outdir=directory("{timestamp_dir}{{timestr}}".format(timestamp_dir=timestamp_dir))
@@ -418,6 +419,38 @@ rule bowtie2_idx:
             
         """
 
+rule bowtie2_idx_large:
+    """
+    This rule should be the same as bowtie2_idx except that the output files have .bt2l suffix instead of .bt2, as produced by bowtie2-build for large genomes.
+    """
+    input:
+        genome_fa="data/{species_id}/sequence/{species_id}.fa",
+    output:
+        "data/{species_id}/indexes/bowtie2/{species_id}.1.bt2l",
+        "data/{species_id}/indexes/bowtie2/{species_id}.2.bt2l",
+        "data/{species_id}/indexes/bowtie2/{species_id}.3.bt2l",
+        "data/{species_id}/indexes/bowtie2/{species_id}.4.bt2l",
+        "data/{species_id}/indexes/bowtie2/{species_id}.rev.1.bt2l",
+        "data/{species_id}/indexes/bowtie2/{species_id}.rev.2.bt2l",
+    log:
+
+
+    benchmark:
+        "benchmarks/bowtie2_idx_large/{species_id}.txt"
+    params:
+        outpref="data/{species_id}/indexes/bowtie2/{species_id}"
+    threads:8
+    resources:
+        mem_gb=100,
+        log_prefix=lambda wildcards: "_".join(wildcards)
+    envmodules:
+        config["bowtie2"],
+        config["python3"]
+    shell:
+        """
+        bowtie2-build --threads {threads} {input.genome_fa} {params.outpref} 
+            
+        """
 
 bismark_threads=16 # must be even number
 rule bismark_idx:

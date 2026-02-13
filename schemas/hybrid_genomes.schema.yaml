@@ -19,6 +19,10 @@ properties:
     type: string
     description: comma-separated list of spike-in IDs. Must correspond to spikein_id in spikein.tsv.
   
+  bowtie2_large:
+    type: boolean
+    description: Boolean to indicate if the bowtie2 index will be "large" (and thus have a .bt2l suffix instead of .bt2).
+
 required:
   - id
   - species_ids
